@@ -1,0 +1,28 @@
+{
+  "manifest_version": 2,
+
+  "name": "InstaBaiter",
+  "description": "Bait them and Gain them",
+  "version": "1.0",
+  "icons": { "128": "icon.png" },
+
+  "browser_action": {
+    "default_icon": "icon.png"
+  },
+
+  "content_scripts": [
+  {
+    "matches": ["*://*.instagram.com/*"],
+    "css": ["libs/bootstrap.min.css", "content.css"],
+    "js": ["libs/jquery.min.js", "content.js"]
+  }],
+
+  "background": {
+      "scripts": ["libs/jquery.min.js", "background.js"]
+    },
+
+  "permissions": [
+    "tabs", "*://*.instagram.com/*",
+    "storage"
+  ]
+}
