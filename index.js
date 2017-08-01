@@ -98,7 +98,7 @@ function SetSettings(settings)
 	$("#input-user-pool-num").val(settings.CollectFollowers.Pool);
 	$("#input-user-collect-time").val(settings.CollectFollowers.Interval);
 	$("#input-user-error-time").val(settings.CollectFollowers.ErrorTime);
-	
+
 	$("#input-following-pool-num").val(settings.CollectFollowings.Pool);
 	$("#input-following-collect-time").val(settings.CollectFollowings.Interval);
 	$("#input-following-error-time").val(settings.CollectFollowings.ErrorTime);
@@ -178,7 +178,7 @@ function UpdateFollowStatus(AllUsers)
 
 function OnFollowedUser(user)
 {
-	var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
+	var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/' target='_blank'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
 
 	var follow_block = $("#follow-block");
 	var follow_table = $(follow_block).find("tbody");
@@ -195,7 +195,7 @@ function OnFollowedUser(user)
 
 function OnUnfollowedUser(user)
 {
-	var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
+	var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/' target='_blank'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
 
 	var unfollow_block = $("#unfollow-block");
 	var unfollow_table = $(unfollow_block).find("tbody");
