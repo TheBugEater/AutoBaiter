@@ -168,7 +168,7 @@ function DoCollectFollowings(CollectJob)
 {
   CollectFollowings(CollectJob.user_id, CollectJob.cursor_key, function(users)
   {
-    if(users)
+    if(users && users.length > 0)
     {
       SendMessage("AddFollowings", "Users", users);
     }
@@ -204,14 +204,19 @@ function CollectFollowings(current_user_id, cursor_key, callback)
       ExtractedUsers.push(UserData);
     }
 
+    var CollectJob = {};
+    CollectJob.user_id = current_user_id;
     if(dataobj.data.user.edge_follow.page_info.has_next_page)
     {
-      var CollectJob = {};
-      CollectJob.user_id = current_user_id;
       CollectJob.cursor_key = dataobj.data.user.edge_follow.page_info.end_cursor;
-
-      SendMessage("UpdateFollowingsJob", "Job", CollectJob);
+      CollectJob.eof = false;
     }
+    else
+    {
+      CollectJob.cursor_key = null;
+      CollectJob.eof = true;
+    }
+    SendMessage("UpdateFollowingsJob", "Job", CollectJob); 
 
     callback(ExtractedUsers);
   });
@@ -254,9 +259,9 @@ function CollectUsersFrom(user_id, cursor_key, callback)
     if(dataobj.data.user.edge_followed_by.page_info.has_next_page)
     {
       var CollectJob = {};
-      CollectJob.user_id = user_id;
-      CollectJob.cursor_key = dataobj.data.user.edge_followed_by.page_info.end_cursor;
-
+      CollectJob.user_id = user_id; 
+      CollectJob.cursor_key = dataobj.data.user.edge_followed_by.page_info.end_cursor; 
+      CollectJob.eof = false;
       SendMessage("AddCollectJob", "Job", CollectJob);
     }
 

@@ -97,7 +97,6 @@
 	margin-top: 5px;
 	background-color: #ffffff;
 	width: 75%;
-	position: fixed;
 	display: block;
 	margin-left: 20%;
 	height: 100%;
@@ -129,7 +128,7 @@
 	background-color: #242424;
 	padding: 5px;
 	margin-bottom: 20px;
-	border: 3px solid #581414;
+	border-radius: 20px;
 }
 
 .scroll-style::-webkit-scrollbar-track
@@ -174,6 +173,12 @@
 	font-family: "Ubuntu";
 }
 
+.text-instafollow-num{
+	color: #d85c35;
+	font-family: "Ubuntu";
+	text-align: right;
+}
+
 .text-instafollow-td {
 	color: #c1c1c1;
 	font-family: "Ubuntu";
@@ -181,6 +186,14 @@
 
 .img-current-user {
 	border: 2px solid;
+}
+
+.settings-block {
+	background-color: #242424;
+	border: 1px solid #581414;
+	margin: 2px;
+	padding: 10px;
+	border-radius: 20px;
 }
 /***************** External *******************/
 /* The switch - the box around the slider */

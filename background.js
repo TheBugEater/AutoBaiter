@@ -9,37 +9,53 @@ var CollectFollowingsJob;
 
 var CurrentUser;
 
-var FollowTimeMin = 20;
-var FollowTimeMax = 60;
-
-var UnfollowTimeMin = 30;
-var UnfollowTimeMax = 60;
-
-var StatusUpdateInterval = 1;
-var CollectJobInterval = 40;
-var CollectFollowingsJobInterval = 30;
-var UserPoolLimit = 500;
+// Time Ranges and Intervals
+var FollowSettings = {};
+var UnfollowSettings = {};
+var CollectFollowers = {};
+var CollectFollowings = {};
 
 var StartFollow = false;
 var StartUnfollow = false;
 
-var NextFollowTimeInSeconds = 0;
-var LastUpdateFollowTimeSeconds = 0;
+// Temp Time Values
+var FollowTime;
+var UnfollowTime;
+var CollectUsersTime;
+var CollectFollowingsTime;
+var StatusUpdateTime;
 
-var NextUnfollowTimeInSeconds = 0;
-var LastUpdateUnfollowTimeSeconds = 0;
-
-var LastUpdateStatusTime = 0;
-var LastUpdateCollectJobTime = 0;
-var LastUpdateCollectFollowingsTime = 0;
+var LastUpdateTime = 0;
+var StatusUpdateInterval = 1;
 
 var ComPortContent;
 var ComPortIndex;
 
-function CollectJob(userid, cursorkey)
+function TempTimeValues(Time, ErrorTime)
+{
+	this.Time = Time;
+	this.ErrorTime = ErrorTime;
+}
+
+function SettingsTimeRanges(TimeMin, TimeMax, ErrorTime)
+{
+	this.TimeMin = TimeMin;
+	this.TimeMax = TimeMax;
+	this.ErrorTime = ErrorTime;
+}
+
+function SettingsCollects(Pool, Interval, ErrorTime)
+{
+	this.Pool = Pool;
+	this.Interval = Interval;
+	this.ErrorTime = ErrorTime;
+}
+
+function CollectJob(userid, cursorkey, eof)
 {
 	this.user_id = userid;
 	this.cursor_key = cursorkey;
+	this.eof = eof;
 }
 
 function User(username, user_id, full_name, user_pic_url, followed_time)
@@ -51,14 +67,37 @@ function User(username, user_id, full_name, user_pic_url, followed_time)
 	this.followed_time = followed_time;
 }
 
+
 $(document).ready(function()
 {
 	// Update our loop every half second
 	setInterval(UpdateLoop, 500);
 
 	//chrome.storage.local.clear();
+	SetDefaultSettings();
+	SetTempSettings();
 	LoadDatabase();
 })
+
+function SetTempSettings()
+{
+	FollowTime = new TempTimeValues(0, 0);
+	UnfollowTime = new TempTimeValues(0, 0);
+	CollectUsersTime = new TempTimeValues(0, 0);
+	CollectFollowingsTime = new TempTimeValues(0, 0);
+	StatusUpdateTime = new TempTimeValues(0, 0);
+
+	LastUpdateTime = (new Date()).getTime() / 1000;
+}
+
+function SetDefaultSettings()
+{
+	FollowSettings = new SettingsTimeRanges(40, 60, 200);
+	UnfollowSettings = new SettingsTimeRanges(40, 60, 200);
+
+	CollectFollowers = new SettingsCollects(1000, 60, 200);
+	CollectFollowings = new SettingsCollects(1000, 60, 200);
+}
 
 chrome.runtime.onConnect.addListener(function(port) 
 {
@@ -160,6 +199,18 @@ function OnMessageReceive(msg)
 	{
 		OnUnfollowedUser(msg.User);
 	}
+	else if(msg.Tag == "RequestSettings")
+	{
+		SendSettings();
+	}
+	else if(msg.Tag == "UpdateSettings")
+	{
+		UpdateSettings(msg.Settings);
+	}
+	else if(msg.Tag == "ResetSettings")
+	{
+		ResetSettings();
+	}
 }
 
 function SendMessage(tag, msgTag, msg, port)
@@ -229,6 +280,26 @@ function GetFollowingsIndexByUserID(user_id)
 	return -1;
 }
 
+function IsAlreadyUnfollowed(user_id)
+{
+	for(var i=0; i < UnfollowedPool.length; i++)
+	{
+		if(UnfollowedPool[i].user_id == user_id)
+			return true;
+	}
+
+	return false;
+}
+
+function DeleteUserIdInFollowings(user_id)
+{
+	for(var i = AllFollowings.length -1; i >= 0; i--)
+	{
+		if(AllFollowings[i].user_id == user_id)
+			AllFollowings.splice(i, 1);
+	}
+}
+
 function GetCollectJobIndex(job)
 {
 	for(var i=0; i < CollectJobs.length; i++)
@@ -272,6 +343,14 @@ function SaveDatabase()
 	Database.CollectFollowingsJob = JSON.stringify(CollectFollowingsJob);
 	Database.AllFollowings = JSON.stringify(AllFollowings);
 
+	var Settings = {};
+	Settings.FollowSettings = FollowSettings;
+	Settings.UnfollowSettings = UnfollowSettings;
+	Settings.CollectFollowers = CollectFollowers;
+	Settings.CollectFollowings = CollectFollowings;
+
+	Database.Settings = JSON.stringify(Settings);
+
 	chrome.storage.local.set({"InstaBaitDatabase": Database});
 }
 
@@ -288,8 +367,43 @@ function LoadDatabase()
 			CollectJobs = JSON.parse(Database.CollectJobs);
 			CollectFollowingsJob = JSON.parse(Database.CollectFollowingsJob);
 			AllFollowings = JSON.parse(Database.AllFollowings);
+
+			var Settings = JSON.parse(Database.Settings);
+			FollowSettings = Settings.FollowSettings;
+			UnfollowSettings = Settings.UnfollowSettings;
+			CollectFollowers = Settings.CollectFollowers;
+			CollectFollowings = Settings.CollectFollowings;
 		}
 	});
+}
+
+function ResetSettings()
+{
+	SetDefaultSettings();
+	SaveDatabase();
+	SendSettings();
+}
+
+function UpdateSettings(settings)
+{
+	FollowSettings = settings.FollowSettings;
+	UnfollowSettings = settings.UnfollowSettings;
+	CollectFollowers = settings.CollectFollowers;
+	CollectFollowings = settings.CollectFollowings;
+
+	SaveDatabase();
+	SendSettings();
+}
+
+function SendSettings()
+{
+	var Settings = {};
+	Settings.FollowSettings = FollowSettings;
+	Settings.UnfollowSettings = UnfollowSettings;
+	Settings.CollectFollowers = CollectFollowers;
+	Settings.CollectFollowings = CollectFollowings;
+
+	SendMessage("Settings", "Settings", Settings, ComPortIndex);
 }
 
 function AddFollowings(users)
@@ -354,6 +468,12 @@ function FollowUser(user)
 
 function UnfollowUser(user)
 {
+	if(IsAlreadyUnfollowed(user.user_id))
+	{
+		DeleteUserIdInFollowings(user.user_id);
+		return;
+	}
+
 	SendMessage("UnfollowUser", "User", user, ComPortContent);
 }
 
@@ -392,16 +512,25 @@ function UpdateCurrentUser(user)
 		CollectFollowingsJob = {};
 		CollectFollowingsJob.user_id = user.user_id;
 		CollectFollowingsJob.cursor_key = null;
+		CollectFollowingsJob.eof = false;
+	}
+	else
+	{
+		if(CollectFollowingsJob.eof)
+		{
+			AllFollowings = [];
+			CollectFollowingsJob.eof = false;
+		}
 	}
 }
 
-function UpdateStatus(time)
+function UpdateStatus(seconds)
 {
-	if(time - LastUpdateStatusTime < StatusUpdateInterval)
-		return;
-
-	if(ComPortIndex)
+	StatusUpdateTime.Time -= seconds;
+	if(StatusUpdateTime.Time < 0 && ComPortIndex)
 	{
+		StatusUpdateTime.Time = StatusUpdateInterval;
+
 		var value = {};
 		value.StartFollow = StartFollow;
 		value.StartUnfollow = StartUnfollow;
@@ -411,31 +540,29 @@ function UpdateStatus(time)
 		value.CurrentUser = CurrentUser;
 
 		SendMessage("StatusUpdate", "Status", value, ComPortIndex);
-		LastUpdateStatusTime = time;
 	}
 }
 
-function UpdateCollectFollowings(time)
+function UpdateCollectFollowings(seconds)
 {
-	if(time - LastUpdateCollectFollowingsTime < CollectFollowingsJobInterval)
+	if(!CollectFollowingsJob)
 		return;
 
-	if(CollectFollowingsJob)
+	CollectFollowingsTime.Time -= seconds;
+	if(!CollectFollowingsJob.eof && CollectFollowingsTime.Time < 0 && CollectFollowingsJob && CollectFollowings.Pool > AllFollowings.length)
 	{
-		LastUpdateCollectFollowingsTime = time;
+		CollectFollowingsTime.Time = CollectFollowings.Interval;
 		SendMessage("DoCollectFollowings", "Job", CollectFollowingsJob, ComPortContent);
 	}
 
 }
 
-function UpdateCollectJob(time)
+function UpdateCollectJob(seconds)
 {
-	if(time - LastUpdateCollectJobTime < CollectJobInterval)
-		return;
-
-	if(CollectJobs.length >= 1 && UserPoolLimit > UserPool.length)
+	CollectUsersTime.Time -= seconds;
+	if(CollectUsersTime.Time < 0 && CollectJobs.length > 0 && CollectFollowers.Pool > UserPool.length)
 	{
-		LastUpdateCollectJobTime = time;
+		CollectUsersTime.Time = CollectFollowers.Interval;
 		var index = GetCollectJobIndex(CollectJobs[getRandomInt(0, CollectJobs.length - 1)]);
 		if(index >= 0)
 		{
@@ -445,15 +572,14 @@ function UpdateCollectJob(time)
 	}
 }
 
-function UpdateFollow(time)
+function UpdateFollow(seconds)
 {
 	if(StartFollow)
 	{
-		var SecondsPassed = time - LastUpdateFollowTimeSeconds;
-		if(NextFollowTimeInSeconds < SecondsPassed && UserPool.length > 0)
+		FollowTime.Time -= seconds;
+		if(FollowTime.Time < 0 && UserPool.length > 0)
 		{
-			NextFollowTimeInSeconds = getRandomInt(FollowTimeMin, FollowTimeMax);
-			LastUpdateFollowTimeSeconds = time;
+			FollowTime.Time = getRandomInt(FollowSettings.TimeMin, FollowSettings.TimeMax);
 
 			var RandFollow = getRandomInt(0, UserPool.length - 1);
 			FollowUser(UserPool[RandFollow]);
@@ -462,15 +588,14 @@ function UpdateFollow(time)
 	}	
 }
 
-function UpdateUnfollow(time)
+function UpdateUnfollow(seconds)
 {
 	if(StartUnfollow)
 	{
-		var SecondsPassed = time - LastUpdateUnfollowTimeSeconds;
-		if(NextUnfollowTimeInSeconds < SecondsPassed && AllFollowings.length > 0)
+		UnfollowTime.Time -= seconds;
+		if(UnfollowTime.Time < 0 && AllFollowings.length > 0)
 		{
-			NextUnfollowTimeInSeconds = getRandomInt(UnfollowTimeMin, UnfollowTimeMax);
-			LastUpdateUnfollowTimeSeconds = time;
+			UnfollowTime.Time = getRandomInt(UnfollowSettings.TimeMin, UnfollowSettings.TimeMax);
 
 			var RandUnfollow = getRandomInt(0, AllFollowings.length - 1);
 			UnfollowUser(AllFollowings[RandUnfollow]);
@@ -481,10 +606,12 @@ function UpdateUnfollow(time)
 function UpdateLoop()
 {
 	var CurrentTime = (new Date()).getTime() / 1000;
+	var SecondsPassed = CurrentTime - LastUpdateTime;
+	LastUpdateTime = CurrentTime;
 
-	UpdateStatus(CurrentTime);
-	UpdateCollectJob(CurrentTime);
-	UpdateCollectFollowings(CurrentTime);
-	UpdateFollow(CurrentTime);
-	UpdateUnfollow(CurrentTime);
+	UpdateStatus(SecondsPassed);
+	UpdateCollectJob(SecondsPassed);
+	UpdateCollectFollowings(SecondsPassed);
+	UpdateFollow(SecondsPassed);
+	UpdateUnfollow(SecondsPassed);
 }
