@@ -11,6 +11,23 @@
     color: #adadad !important;
 }
 
+.header-banner {
+    position: fixed;
+    width: 100%;
+	height: 100%;
+    top: 0px;
+    background-color:#242424 !important; 
+    color: #FFFFFF !important;
+    padding-top: 30px !important; 
+    padding-bottom: 30px !important;
+}
+
+.body-wrapper {
+	background-color: #FFFFFF;
+	width: 100%;
+	height: 100%;
+}
+
 .insta-follow-btn-style{
     position: fixed;
     top: 100px;
@@ -95,7 +112,6 @@
 
 .content-wrapper {
 	margin-top: 5px;
-	background-color: #ffffff;
 	width: 75%;
 	display: block;
 	margin-left: 20%;
@@ -185,7 +201,8 @@
 }
 
 .img-current-user {
-	border: 2px solid;
+	border: 2px solid #242424;
+	border-radius: 10px;
 }
 
 .settings-block {
@@ -194,6 +211,10 @@
 	margin: 2px;
 	padding: 10px;
 	border-radius: 20px;
+}
+
+.button-settings {
+	margin: 10px;
 }
 /***************** External *******************/
 /* The switch - the box around the slider */

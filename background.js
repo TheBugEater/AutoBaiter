@@ -76,6 +76,7 @@ $(document).ready(function()
 	//chrome.storage.local.clear();
 	SetDefaultSettings();
 	SetTempSettings();
+	
 	LoadDatabase();
 })
 
