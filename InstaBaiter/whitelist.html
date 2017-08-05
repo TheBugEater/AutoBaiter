@@ -2,7 +2,7 @@
 	<div class="row">
 		<div class="col-md-12">
 			<div class="row">
-				<div class="col-md-8">
+				<div class="col-md-8 whitelist-bg">
 					<div class="row">
 						<div class="col-md-12 text-instafollow">
 							<h3>
@@ -12,17 +12,25 @@
 					</div>
 					<div class="row">
 						<div class="col-md-12">
+						<input type="text" class="form-control whitelist-search" id="user-search">
+						<br>
+							<div class ="whitelist-content scroll-style">
 							<table class="table">
 								<tbody id="whitelisted-users">
 								</tbody>
 							</table>
+							</div>
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-4">
-						<button class="btn btn-md btn-success pull-right button-settings" id="whitelist-followings" type="button">
-						<span class="glyphicon glyphicon-floppy-saved"></span> Whitelist Followings
+						<div class="col-md-4" style="text-align: left; width: 100%; padding-bottom: 20px;">
+						<button class="btn btn-md pull-left btn-success button-settings" id="whitelist-followings" type="button">
+						<span class="glyphicon glyphicon-import"></span> Whitelist Followings
 						</button>
+						<button class="btn btn-md pull-right btn-success button-settings" id="whitelist-followings" type="button">
+						<span class="glyphicon glyphicon-user"></span> Add User
+						</button>
+		
 						</div>
 					</div>
 				</div>

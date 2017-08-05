@@ -3,9 +3,9 @@ var CurrentUser;
 
 $(document).ready(function()
 {
-  CreateCollectFollowersButton();
   CreateComPort();
   RetriveUserHeaders();
+  CreateCollectFollowersButton();
  });
 
 function getCookie(name) {
@@ -64,9 +64,9 @@ function OnMessageReceive(msg)
 
 function OnReceiveCollectJobStatus(status)
 {
-  $('body').append('<div><button class="btn insta-follow-btn-style" id="collect-followers-instafollow" insta="false" type="button"></button></div>'); 
   var collectButton = $("#collect-followers-instafollow");
-  $(collectButton).click(OnClickCollectFollowers); 
+  $(collectButton).show();
+
   if(status)
   {
     $(collectButton).attr("insta", "true");
@@ -77,6 +77,8 @@ function OnReceiveCollectJobStatus(status)
     $(collectButton).attr("insta", "false");
     $(collectButton).text("Grab Followers");
   }
+
+  $(collectButton).prop('disabled', false);
 }
 
 function CreateCollectFollowersButton()
@@ -85,6 +87,11 @@ function CreateCollectFollowersButton()
   {
     if(userdata)
     {
+      $('body').append('<div><button class="btn insta-follow-btn-style" id="collect-followers-instafollow" insta="false" type="button"></button></div>'); 
+      var collectButton = $("#collect-followers-instafollow");
+      $(collectButton).hide();
+      $(collectButton).click(OnClickCollectFollowers); 
+
       SendMessage("RequestCollectJobStatus", "user_id", userdata.user_id);
     }
   });
@@ -95,6 +102,7 @@ function OnClickCollectFollowers()
     GetCurrentPageUserData(function(userdata){
 
       var collectButton = $("#collect-followers-instafollow");
+      $(collectButton).prop('disabled', true);
       if($(collectButton).attr("insta") == "false")
       {
         var CollectJob = {};
@@ -102,16 +110,13 @@ function OnClickCollectFollowers()
         CollectJob.cursorkey = null;
 
         SendMessage("AddCollectJob", "Job", CollectJob);
-        $(collectButton).attr("insta", "true");
-        $(collectButton).text("Stop Grabbing Followers");
       }
       else
       {
-        $(collectButton).attr("insta", "false");
-        $(collectButton).text("Grab Followers");
         SendMessage("RemoveCollectJob", "user_id", userdata.user_id);
       }
 
+      SendMessage("RequestCollectJobStatus", "user_id", userdata.user_id);
   });
 }
 

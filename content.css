@@ -26,6 +26,7 @@
 	background-color: #FFFFFF;
 	width: 100%;
 	height: 100%;
+    padding-bottom: 100px;
 }
 
 .insta-follow-btn-style{
@@ -151,20 +152,20 @@
 {
 	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
 	border-radius: 5px;
-	background-color: #F5F5F5;
+	background-color: #555;
 }
 
 .scroll-style::-webkit-scrollbar
 {
 	width: 5px;
-	background-color: #F5F5F5;
+	background-color: #555;
 }
 
 .scroll-style::-webkit-scrollbar-thumb
 {
 	border-radius: 5px;
 	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,.3);
-	background-color: #555;
+	background-color: #F5F5F5;
 }
 
 .follow-table-scroll {
@@ -204,6 +205,7 @@
 .text-instafollow-td {
 	color: #c1c1c1;
 	font-family: "Ubuntu";
+	text-align: left !important;
 }
 
 .img-current-user {
@@ -225,6 +227,23 @@
 
 .setting-options {
 	margin-bottom: 50px;
+}
+
+.whitelist-bg {
+	background-color: #242424;
+	padding-top: 10px;
+	border-radius: 25px;
+}
+
+.whitelist-search {
+	background-color: #444444 !important;
+    color: #f3f3f3 !important;
+    font-weight: bold !important;
+}
+
+.whitelist-content {
+	height: 400px;
+	overflow-y: auto;
 }
 /***************** External *******************/
 /* The switch - the box around the slider */

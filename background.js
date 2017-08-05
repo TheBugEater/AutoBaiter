@@ -223,6 +223,11 @@ function OnMessageReceive(msg)
 	{
 		SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
 	}
+	else if(msg.Tag == "RemoveWhitelistUser")
+	{
+		RemoveWhitelistUser(msg.user_id);
+		SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
+	}
 }
 
 function SendMessage(tag, msgTag, msg, port)
@@ -334,6 +339,21 @@ function IsUserInWhitelist(user_id)
 	return false;
 }
 
+function RemoveWhitelistUser(user_id)
+{
+	for(var i=0; i < Whitelist.length; i++)
+	{
+		if(Whitelist[i].user_id == user_id)
+		{
+			var user = Whitelist.splice(i, 1);
+			if(GetFollowingsIndexByUserID(user[0].user_id) == -1)
+				AllFollowings.push(user[0]);
+
+			break;
+		}
+	}
+}
+
 function IsNewUser(user)
 {
 	if(GetUserIndexByUserID(user.user_id) >= 0)
@@ -435,7 +455,7 @@ function AddFollowings(users)
 {
 	if(IsWhitelistFollowings)
 	{
-		AddWhiteListUsers(users);
+		AddWhitelistUsers(users);
 		if(CollectFollowingsJob && CollectFollowingsJob.eof)
 		{
 			IsWhitelistFollowings = false;
@@ -561,6 +581,10 @@ function OnFollowedUser(user)
 	{
 		User[0].followed_time = Date.now();
 		FollowedPool.push(User[0]);
+
+		if(GetFollowingsIndexByUserID(User[0].user_id) == -1)
+			AllFollowings.push(User[0]);
+
 		SendMessage("UserFollowComplete", "User", User[0], ComPortIndex);
 	}
 
@@ -591,7 +615,7 @@ function UpdateCurrentUser(user)
 		CollectFollowingsJob.eof = false;
 		IsWhitelistFollowings = false;
 	}
-	else
+		else
 	{
 		CollectFollowingsJob.eof = false;
 		IsWhitelistFollowings = false;

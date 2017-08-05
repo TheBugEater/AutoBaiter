@@ -53,6 +53,15 @@ $(document).ready(function()
 			{
 				WhitelistFollowings();
 			});
+
+			$(document).on('click', '.remove-user', function(){
+				RemoveWhitelistedUser(this);
+			});
+
+			$("#user-search").keyup(function()
+			{
+				FilterWhitelistSearch(this);
+			});
 		});
 	});
 
@@ -172,6 +181,14 @@ function WhitelistFollowings()
 	SendMessage("WhitelistFollowings", "", "");
 }
 
+function RemoveWhitelistedUser(button)
+{
+	var user_id = $(button).attr("user_id");
+	$(button).closest("tr").remove();
+
+	SendMessage("RemoveWhitelistUser", "user_id", user_id);
+}
+
 function UpdateStatus(status)
 {
 	$("#user-pool-num").text(status.UserPoolSize);
@@ -186,20 +203,47 @@ function UpdateStatus(status)
 	$("#set-unfollow-check").prop("checked", status.StartUnfollow);
 }
 
+function FilterWhitelistSearch(input)
+{
+	var text = $(input).val().toLowerCase();
+	var whitelist_block = $("#whitelisted-users");
+	$(whitelist_block).find("tr").each(function()
+	{
+		if($(this).text().toLowerCase().indexOf(text) < 0 && text != "")
+		{
+			$(this).hide();
+		}
+		else
+		{
+			$(this).show();
+		}
+	});
+}
+
 function ClearWhitelistTable()
 {
+
 	$("#whitelisted-users").empty();
 }
 
 function AddedWhitelistUsers(users)
 {
+	var whitelist_block = $("#whitelisted-users");
 	for(var i = 0; i < users.length; i++)
 	{
 		var user = users[i];
-		var whitelist_block = $("#whitelisted-users");
-		var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/' target='_blank'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
+		var userRow = `
+		<tr>
+		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
+		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
+		<td style="vertical-align: middle;">
+        <button class="btn-danger remove-user" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
+		</tr>
+		`;
 		$(whitelist_block).prepend(userRow);
 	}
+
+	FilterWhitelistSearch($("#user-search"));
 }
 
 function UpdateFollowStatus(AllUsers)
@@ -220,7 +264,12 @@ function UpdateFollowStatus(AllUsers)
 
 function OnFollowedUser(user)
 {
-	var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/' target='_blank'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
+	var userRow = `
+		<tr>
+		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
+		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
+		</tr>
+	`;
 
 	var follow_block = $("#follow-block");
 	var follow_table = $(follow_block).find("tbody");
@@ -237,7 +286,12 @@ function OnFollowedUser(user)
 
 function OnUnfollowedUser(user)
 {
-	var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/' target='_blank'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
+	var userRow = `
+		<tr>
+		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
+		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
+		</tr>
+	`;
 
 	var unfollow_block = $("#unfollow-block");
 	var unfollow_table = $(unfollow_block).find("tbody");
