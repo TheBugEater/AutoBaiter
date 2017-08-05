@@ -3,11 +3,14 @@ var UserPool = [];
 var FollowedPool = [];
 var UnfollowedPool = [];
 var AllFollowings = [];
+var Whitelist = [];
 
 var CollectJobs = [];
 var CollectFollowingsJob;
 
 var CurrentUser;
+
+var IsWhitelistFollowings = false;
 
 // Time Ranges and Intervals
 var FollowSettings = {};
@@ -212,6 +215,14 @@ function OnMessageReceive(msg)
 	{
 		ResetSettings();
 	}
+	else if(msg.Tag == "WhitelistFollowings")
+	{
+		WhitelistFollowings();
+	}
+	else if(msg.Tag == "RequestWhitelist")
+	{
+		SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
+	}
 }
 
 function SendMessage(tag, msgTag, msg, port)
@@ -312,6 +323,17 @@ function GetCollectJobIndex(job)
 	return -1;
 }
 
+function IsUserInWhitelist(user_id)
+{
+	for(var i=0; i < Whitelist.length; i++)
+	{
+		if(Whitelist[i].user_id == user_id)
+			return true;
+	}
+
+	return false;
+}
+
 function IsNewUser(user)
 {
 	if(GetUserIndexByUserID(user.user_id) >= 0)
@@ -343,6 +365,7 @@ function SaveDatabase()
 	Database.CollectJobs = JSON.stringify(CollectJobs);
 	Database.CollectFollowingsJob = JSON.stringify(CollectFollowingsJob);
 	Database.AllFollowings = JSON.stringify(AllFollowings);
+	Database.Whitelist = JSON.stringify(Whitelist);
 
 	var Settings = {};
 	Settings.FollowSettings = FollowSettings;
@@ -368,6 +391,7 @@ function LoadDatabase()
 			CollectJobs = JSON.parse(Database.CollectJobs);
 			CollectFollowingsJob = JSON.parse(Database.CollectFollowingsJob);
 			AllFollowings = JSON.parse(Database.AllFollowings);
+			Whitelist = JSON.parse(Database.Whitelist);
 
 			var Settings = JSON.parse(Database.Settings);
 			FollowSettings = Settings.FollowSettings;
@@ -409,10 +433,61 @@ function SendSettings()
 
 function AddFollowings(users)
 {
+	if(IsWhitelistFollowings)
+	{
+		AddWhiteListUsers(users);
+		if(CollectFollowingsJob && CollectFollowingsJob.eof)
+		{
+			IsWhitelistFollowings = false;
+		}
+		return;
+	}
+
 	for(var i=0; i < users.length; i++)
 	{
-		AllFollowings.push(users[i]);
+		var user = users[i];
+
+		// Dont add whitelisted users
+		if(IsUserInWhitelist(user.user_id))
+			continue;
+
+		// Dont allow duplicates
+		var index = GetFollowingsIndexByUserID(user.user_id);
+		if(index == -1)
+			AllFollowings.push(users[i]);
 	}
+	SaveDatabase();
+}
+
+function WhitelistFollowings()
+{
+	IsWhitelistFollowings = true;
+
+	for(var i=0; i < AllFollowings.length; i++)
+	{
+		var user = AllFollowings[i];
+		// If User is already in whitelist don't duplicate
+		if(!IsUserInWhitelist(user.user_id))
+			Whitelist.push(user);
+	}
+
+	AllFollowings.length = 0;
+	SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
+
+	SaveDatabase();
+}
+
+function AddWhitelistUsers(users)
+{
+	for(var i=0; i < users.length; i++)
+	{
+		var user = users[i];
+		DeleteUserIdInFollowings(user.user_id);
+
+		Whitelist.push(user);
+	}
+
+	SendMessage("UpdatedWhitelistUsers", "Users", users, ComPortIndex);
 	SaveDatabase();
 }
 
@@ -514,14 +589,12 @@ function UpdateCurrentUser(user)
 		CollectFollowingsJob.user_id = user.user_id;
 		CollectFollowingsJob.cursor_key = null;
 		CollectFollowingsJob.eof = false;
+		IsWhitelistFollowings = false;
 	}
 	else
 	{
-		if(CollectFollowingsJob.eof)
-		{
-			AllFollowings = [];
-			CollectFollowingsJob.eof = false;
-		}
+		CollectFollowingsJob.eof = false;
+		IsWhitelistFollowings = false;
 	}
 }
 
@@ -550,7 +623,7 @@ function UpdateCollectFollowings(seconds)
 		return;
 
 	CollectFollowingsTime.Time -= seconds;
-	if(!CollectFollowingsJob.eof && CollectFollowingsTime.Time < 0 && CollectFollowingsJob && CollectFollowings.Pool > AllFollowings.length)
+	if(!CollectFollowingsJob.eof && CollectFollowingsTime.Time < 0 && CollectFollowingsJob && ((CollectFollowings.Pool > AllFollowings.length) || IsWhitelistFollowings))
 	{
 		CollectFollowingsTime.Time = CollectFollowings.Interval;
 		SendMessage("DoCollectFollowings", "Job", CollectFollowingsJob, ComPortContent);

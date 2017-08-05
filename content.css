@@ -189,6 +189,12 @@
 	font-family: "Ubuntu";
 }
 
+.text-instafollow-settings {
+	color: #d85c35;
+	font-family: "Ubuntu";
+	text-align: left;
+}
+
 .text-instafollow-num{
 	color: #d85c35;
 	font-family: "Ubuntu";
@@ -215,6 +221,10 @@
 
 .button-settings {
 	margin: 10px;
+}
+
+.setting-options {
+	margin-bottom: 50px;
 }
 /***************** External *******************/
 /* The switch - the box around the slider */

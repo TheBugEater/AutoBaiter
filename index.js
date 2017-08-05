@@ -43,6 +43,19 @@ $(document).ready(function()
 		});
 	});
 
+	$("#sidebar-whitelist").click(function()
+	{
+		$(".content-wrapper").empty();
+		$(".content-wrapper").load("InstaBaiter/whitelist.html", function()
+		{
+			SendMessage("RequestWhitelist", "", "");
+			$("#whitelist-followings").click(function()
+			{
+				WhitelistFollowings();
+			});
+		});
+	});
+
 	$("#sidebar-home").click();
 	CreateComPort();
 })
@@ -51,7 +64,6 @@ function CreateComPort()
 {
   ComPort = chrome.runtime.connect({name: "instafollow213index"});
   ComPort.onMessage.addListener(OnMessageReceive);
-
 }
 
 function SendMessage(tag, msgTag, msg)
@@ -82,6 +94,15 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "Settings")
 	{
 		SetSettings(msg.Settings);
+	}
+	else if(msg.Tag == "AddedWhitelistUsers")
+	{
+		ClearWhitelistTable();
+		AddedWhitelistUsers(msg.Users);
+	}
+	else if(msg.Tag == "UpdatedWhitelistUsers")
+	{
+		AddedWhitelistUsers(msg.Users);
 	}
 }
 
@@ -146,6 +167,11 @@ function SetUnfollowValue(value)
 	SendMessage("SetUnfollowValue", "Value", value);
 }
 
+function WhitelistFollowings()
+{
+	SendMessage("WhitelistFollowings", "", "");
+}
+
 function UpdateStatus(status)
 {
 	$("#user-pool-num").text(status.UserPoolSize);
@@ -158,6 +184,22 @@ function UpdateStatus(status)
 	}
 	$("#set-follow-check").prop("checked", status.StartFollow);
 	$("#set-unfollow-check").prop("checked", status.StartUnfollow);
+}
+
+function ClearWhitelistTable()
+{
+	$("#whitelisted-users").empty();
+}
+
+function AddedWhitelistUsers(users)
+{
+	for(var i = 0; i < users.length; i++)
+	{
+		var user = users[i];
+		var whitelist_block = $("#whitelisted-users");
+		var userRow = "<tr><td><a href='https://www.instagram.com/" + user.username + "/' target='_blank'><img class='img-rounded' width='64' height='64' src='" + user.user_pic_url + "'/></a></td><td class='align-mid-vertical text-instafollow-td'>" + user.username + "</td><td class='text-instafollow-td align-mid-vertical'>" + user.full_name + "</td></tr>"
+		$(whitelist_block).prepend(userRow);
+	}
 }
 
 function UpdateFollowStatus(AllUsers)
