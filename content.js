@@ -83,11 +83,12 @@ function OnReceiveCollectJobStatus(status)
 
 function CreateCollectFollowersButton()
 {
+  $("#instabaiter-inject").remove();
   GetCurrentPageUserData(function(userdata)
   {
     if(userdata)
     {
-      $('body').append('<div><button class="btn insta-follow-btn-style" id="collect-followers-instafollow" insta="false" type="button"></button></div>'); 
+      $('body').append('<div id="instabaiter-inject"><button class="btn insta-follow-btn-style" id="collect-followers-instafollow" insta="false" type="button"></button></div>'); 
       var collectButton = $("#collect-followers-instafollow");
       $(collectButton).hide();
       $(collectButton).click(OnClickCollectFollowers); 
@@ -147,6 +148,9 @@ function FollowUser(user)
     beforeSend: function (xhr) {
       xhr.setRequestHeader("x-csrftoken", CurrentUser.CSRF);
       xhr.setRequestHeader("x-instagram-ajax", "1");
+    },
+    error: function (request, status, error) {
+        SendMessage("Error", "String", "FollowError");
     }
   })
   .done(function(msg){
@@ -162,6 +166,9 @@ function UnfollowUser(user)
     beforeSend: function (xhr) {
       xhr.setRequestHeader("x-csrftoken", CurrentUser.CSRF);
       xhr.setRequestHeader("x-instagram-ajax", "1");
+    },
+    error: function (request, status, error) {
+        SendMessage("Error", "String", "UnfollowError");
     }
   })
   .done(function(msg){
@@ -198,6 +205,9 @@ function CollectFollowings(current_user_id, cursor_key, callback)
   $.ajax({
     url: userurl,
     method: "GET",
+    error: function (request, status, error) {
+      SendMessage("Error", "String", "CollectFollowingError");
+    }
   })
   .done(function(dataobj)
   {
@@ -246,6 +256,9 @@ function CollectUsersFrom(user_id, cursor_key, callback)
   $.ajax({
     url: userurl,
     method: "GET",
+    error: function (request, status, error) {
+      SendMessage("Error", "String", "CollectFollowersError");
+    }
   })
   .done(function(dataobj)
   {

@@ -228,6 +228,10 @@ function OnMessageReceive(msg)
 		RemoveWhitelistUser(msg.user_id);
 		SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
 	}
+	else if(msg.Tag == "Error")
+	{
+		HandleErrors(msg.String);
+	}
 }
 
 function SendMessage(tag, msgTag, msg, port)
@@ -372,6 +376,26 @@ function IsNewUser(user)
 	}	
 
 	return true;
+}
+
+function HandleErrors(string)
+{
+	if(string == "FollowError")
+	{
+		FollowTime.Time = FollowSettings.ErrorTime;
+	}
+	else if(string == "UnfollowError")
+	{
+		UnfollowTime.Time = UnfollowSettings.ErrorTime;
+	}
+	else if(string == "CollectFollowingError")
+	{
+		CollectFollowingsTime.Time = CollectFollowings.ErrorTime;
+	}
+	else if(string == "CollectFollowersError")
+	{
+		CollectUsersTime.Time = CollectFollowers.ErrorTime;
+	}
 }
 
 ///////////////////////////////////////////////////////////////
