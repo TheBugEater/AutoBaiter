@@ -23,6 +23,7 @@
 
   "permissions": [
     "tabs", "*://*.instagram.com/*",
-    "storage"
+    "storage",
+    "webNavigation"
   ]
 }

@@ -506,7 +506,8 @@ function AddFollowings(users)
 function WhitelistFollowings()
 {
 	IsWhitelistFollowings = true;
-
+	CollectFollowingsJob.eof = false;
+	
 	for(var i=0; i < AllFollowings.length; i++)
 	{
 		var user = AllFollowings[i];

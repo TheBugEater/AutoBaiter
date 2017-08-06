@@ -6,6 +6,8 @@ $(document).ready(function()
   CreateComPort();
   RetriveUserHeaders();
   CreateCollectFollowersButton();
+
+  setInterval(UpdateStates, 2000);
  });
 
 function getCookie(name) {
@@ -21,6 +23,31 @@ function getCookie(name) {
      }
  }
  return cookieValue;
+}
+
+function UpdateStates()
+{
+  var collectDiv = $("#instabaiter-inject");
+  var userPage = $("a[href$='/followers/']");
+  if(userPage.length <= 0)
+  {
+    $(collectDiv).hide('slow');
+    return;
+  }
+
+  var IsDisplayed = $(collectDiv).is(':visible');      
+  if(IsDisplayed)
+  {
+    return;
+  }
+
+  GetCurrentPageUserData(function(userdata)
+  {
+    if(userdata)
+    {
+      SendMessage("RequestCollectJobStatus", "user_id", userdata.user_id);
+    }
+  });
 }
 
 /////////// Communication /////////////////////////////////
@@ -64,9 +91,10 @@ function OnMessageReceive(msg)
 
 function OnReceiveCollectJobStatus(status)
 {
-  var collectButton = $("#collect-followers-instafollow");
-  $(collectButton).show();
+  var collectDiv = $("#instabaiter-inject");
+  $(collectDiv).show();
 
+  var collectButton = $("#collect-followers-instafollow");
   if(status)
   {
     $(collectButton).attr("insta", "true");
@@ -84,18 +112,9 @@ function OnReceiveCollectJobStatus(status)
 function CreateCollectFollowersButton()
 {
   $("#instabaiter-inject").remove();
-  GetCurrentPageUserData(function(userdata)
-  {
-    if(userdata)
-    {
-      $('body').append('<div id="instabaiter-inject"><button class="btn insta-follow-btn-style" id="collect-followers-instafollow" insta="false" type="button"></button></div>'); 
-      var collectButton = $("#collect-followers-instafollow");
-      $(collectButton).hide();
-      $(collectButton).click(OnClickCollectFollowers); 
-
-      SendMessage("RequestCollectJobStatus", "user_id", userdata.user_id);
-    }
-  });
+  $('body').append('<div id="instabaiter-inject" style="display:none;"><button class="btn insta-follow-btn-style" id="collect-followers-instafollow" insta="false" type="button"></button></div>'); 
+  var collectButton = $("#collect-followers-instafollow");
+  $(collectButton).click(OnClickCollectFollowers);
 }
 
 function OnClickCollectFollowers()

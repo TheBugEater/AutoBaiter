@@ -21,6 +21,8 @@ $(document).ready(function()
 			{
 				SetUnfollowValue($(this).is(':checked'));
 			});
+
+			SetActiveSidebarItem("#sidebar-home");
 		});
 	});
 
@@ -40,6 +42,8 @@ $(document).ready(function()
 			{
 				SaveSettings();
 			});
+
+			SetActiveSidebarItem("#sidebar-settings");
 		});
 	});
 
@@ -62,12 +66,30 @@ $(document).ready(function()
 			{
 				FilterWhitelistSearch(this);
 			});
+
+			SetActiveSidebarItem("#sidebar-whitelist");
 		});
 	});
 
 	$("#sidebar-home").click();
 	CreateComPort();
 })
+
+function SetActiveSidebarItem(sidebar_id)
+{
+	$("#sidebar-home").addClass("sidebar-item");
+	$("#sidebar-whitelist").addClass("sidebar-item");
+	$("#sidebar-settings").addClass("sidebar-item");
+	$("#sidebar-help").addClass("sidebar-item");
+
+	$("#sidebar-home").removeClass("sidebar-item-active");
+	$("#sidebar-whitelist").removeClass("sidebar-item-active");
+	$("#sidebar-settings").removeClass("sidebar-item-active");
+	$("#sidebar-help").removeClass("sidebar-item-active");
+
+	$(sidebar_id).removeClass("sidebar-item");
+	$(sidebar_id).addClass("sidebar-item-active");
+}
 
 function CreateComPort()
 {
