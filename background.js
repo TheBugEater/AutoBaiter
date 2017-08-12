@@ -106,6 +106,8 @@ function SetDefaultSettings()
 
 	CollectFollowers = new SettingsCollects(1000, 60, 200);
 	CollectFollowings = new SettingsCollects(1000, 60, 200);
+
+	UnfollowAfterDays = 1;
 }
 
 chrome.runtime.onConnect.addListener(function(port) 
@@ -413,6 +415,10 @@ function HandleErrors(string)
 	}
 }
 
+function SetMinMax(value, min, max)
+{
+	return Math.min(Math.max(value, min), max);
+}
 ///////////////////////////////////////////////////////////////
 
 function SaveDatabase()
@@ -463,6 +469,27 @@ function LoadDatabase()
 	});
 }
 
+function ClampSettingsValue()
+{
+	FollowSettings.TimeMin = SetMinMax(FollowSettings.TimeMin, 20, 100);
+	FollowSettings.TimeMax = SetMinMax(FollowSettings.TimeMax, 30, 1000);
+	FollowSettings.ErrorTime = SetMinMax(FollowSettings.ErrorTime, 100, 1000);
+
+	UnfollowSettings.TimeMin = SetMinMax(UnfollowSettings.TimeMin, 20, 100);
+	UnfollowSettings.TimeMax = SetMinMax(UnfollowSettings.TimeMax, 30, 1000);
+	UnfollowSettings.ErrorTime = SetMinMax(UnfollowSettings.ErrorTime, 100, 1000);
+
+	CollectFollowers.Pool = SetMinMax(CollectFollowers.Pool, 100, 10000);
+	CollectFollowers.Interval = SetMinMax(CollectFollowers.Interval, 30, 200);
+	CollectFollowers.ErrorTime = SetMinMax(CollectFollowers.ErrorTime, 100, 1000);
+
+	CollectFollowings.Pool = SetMinMax(CollectFollowings.Pool, 100, 10000);
+	CollectFollowings.Interval = SetMinMax(CollectFollowings.Interval, 30, 200);
+	CollectFollowings.ErrorTime = SetMinMax(CollectFollowings.ErrorTime, 100, 1000);
+
+	UnfollowAfterDays = SetMinMax(UnfollowAfterDays, 0, 100);
+}
+
 function ResetSettings()
 {
 	SetDefaultSettings();
@@ -478,6 +505,7 @@ function UpdateSettings(settings)
 	CollectFollowings = settings.CollectFollowings;
 	UnfollowAfterDays = settings.UnfollowAfterDays;
 
+	ClampSettingsValue();
 	SaveDatabase();
 	SendSettings();
 }

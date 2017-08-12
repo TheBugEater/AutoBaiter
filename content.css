@@ -184,7 +184,7 @@
 
 .follow-table-scroll {
 	overflow-y: auto;
-    height: 250px;
+    height: 230px;
     overflow-x: hidden;
 }
 
@@ -258,6 +258,10 @@
 .whitelist-content {
 	height: 400px;
 	overflow-y: auto;
+}
+
+.vertical-mid {
+	vertical-align: middle !important;
 }
 /***************** External *******************/
 /* The switch - the box around the slider */

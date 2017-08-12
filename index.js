@@ -67,6 +67,9 @@ $(document).ready(function()
 				FilterWhitelistSearch(this);
 			});
 
+			$("#whitelist-user").click(function(){
+    		});
+
 			SetActiveSidebarItem("#sidebar-whitelist");
 		});
 	});
@@ -154,6 +157,8 @@ function SetSettings(settings)
 	$("#input-following-pool-num").val(settings.CollectFollowings.Pool);
 	$("#input-following-collect-time").val(settings.CollectFollowings.Interval);
 	$("#input-following-error-time").val(settings.CollectFollowings.ErrorTime);
+
+	$("#input-unfollow-days").val(settings.UnfollowAfterDays);
 }
 
 function SaveSettings()
@@ -179,6 +184,8 @@ function SaveSettings()
 	settings.CollectFollowings.Pool = $("#input-following-pool-num").val();
 	settings.CollectFollowings.Interval = $("#input-following-collect-time").val();
 	settings.CollectFollowings.ErrorTime = $("#input-following-error-time").val();
+
+	settings.UnfollowAfterDays = $("#input-unfollow-days").val();
 
 	SendMessage("UpdateSettings", "Settings", settings);
 }
