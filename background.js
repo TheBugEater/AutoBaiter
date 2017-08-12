@@ -18,6 +18,8 @@ var UnfollowSettings = {};
 var CollectFollowers = {};
 var CollectFollowings = {};
 
+var UnfollowAfterDays = 1;
+
 var StartFollow = false;
 var StartUnfollow = false;
 
@@ -27,9 +29,11 @@ var UnfollowTime;
 var CollectUsersTime;
 var CollectFollowingsTime;
 var StatusUpdateTime;
+var CheckFollowTime;
 
 var LastUpdateTime = 0;
 var StatusUpdateInterval = 1;
+var CheckFollowPoolInterval = 5000;
 
 var ComPortContent;
 var ComPortIndex;
@@ -90,6 +94,7 @@ function SetTempSettings()
 	CollectUsersTime = new TempTimeValues(0, 0);
 	CollectFollowingsTime = new TempTimeValues(0, 0);
 	StatusUpdateTime = new TempTimeValues(0, 0);
+	CheckFollowTime = new TempTimeValues(0, 0);
 
 	LastUpdateTime = (new Date()).getTime() / 1000;
 }
@@ -358,6 +363,16 @@ function RemoveWhitelistUser(user_id)
 	}
 }
 
+function IsInAppFollowedList(user)
+{
+	for(var i=0; i < FollowedPool.length; i++)
+	{
+		if(FollowedPool[i].user_id == user.user_id)
+			return true;
+	}
+	return false;
+}
+
 function IsNewUser(user)
 {
 	if(GetUserIndexByUserID(user.user_id) >= 0)
@@ -416,6 +431,7 @@ function SaveDatabase()
 	Settings.UnfollowSettings = UnfollowSettings;
 	Settings.CollectFollowers = CollectFollowers;
 	Settings.CollectFollowings = CollectFollowings;
+	Settings.UnfollowAfterDays = UnfollowAfterDays;
 
 	Database.Settings = JSON.stringify(Settings);
 
@@ -442,6 +458,7 @@ function LoadDatabase()
 			UnfollowSettings = Settings.UnfollowSettings;
 			CollectFollowers = Settings.CollectFollowers;
 			CollectFollowings = Settings.CollectFollowings;
+			UnfollowAfterDays = Settings.UnfollowAfterDays;
 		}
 	});
 }
@@ -459,6 +476,7 @@ function UpdateSettings(settings)
 	UnfollowSettings = settings.UnfollowSettings;
 	CollectFollowers = settings.CollectFollowers;
 	CollectFollowings = settings.CollectFollowings;
+	UnfollowAfterDays = settings.UnfollowAfterDays;
 
 	SaveDatabase();
 	SendSettings();
@@ -471,6 +489,7 @@ function SendSettings()
 	Settings.UnfollowSettings = UnfollowSettings;
 	Settings.CollectFollowers = CollectFollowers;
 	Settings.CollectFollowings = CollectFollowings;
+	Settings.UnfollowAfterDays = UnfollowAfterDays;
 
 	SendMessage("Settings", "Settings", Settings, ComPortIndex);
 }
@@ -493,6 +512,10 @@ function AddFollowings(users)
 
 		// Dont add whitelisted users
 		if(IsUserInWhitelist(user.user_id))
+			continue;
+
+		// Don't allow to add Followed Users from the app, They'll be added automatically
+		if(IsInAppFollowedList(user))
 			continue;
 
 		// Dont allow duplicates
@@ -529,7 +552,8 @@ function AddWhitelistUsers(users)
 		var user = users[i];
 		DeleteUserIdInFollowings(user.user_id);
 
-		Whitelist.push(user);
+		if(!IsUserInWhitelist(user.user_id))
+			Whitelist.push(user);
 	}
 
 	SendMessage("UpdatedWhitelistUsers", "Users", users, ComPortIndex);
@@ -607,9 +631,6 @@ function OnFollowedUser(user)
 		User[0].followed_time = Date.now();
 		FollowedPool.push(User[0]);
 
-		if(GetFollowingsIndexByUserID(User[0].user_id) == -1)
-			AllFollowings.push(User[0]);
-
 		SendMessage("UserFollowComplete", "User", User[0], ComPortIndex);
 	}
 
@@ -638,12 +659,10 @@ function UpdateCurrentUser(user)
 		CollectFollowingsJob.user_id = user.user_id;
 		CollectFollowingsJob.cursor_key = null;
 		CollectFollowingsJob.eof = false;
-		IsWhitelistFollowings = false;
 	}
-		else
+	else
 	{
 		CollectFollowingsJob.eof = false;
-		IsWhitelistFollowings = false;
 	}
 }
 
@@ -726,6 +745,29 @@ function UpdateUnfollow(seconds)
 	}		
 }
 
+function CheckFollowPool(seconds)
+{
+	CheckFollowTime.Time -= seconds;
+	if(CheckFollowTime.Time > 0)
+	{
+		return;
+	}
+
+	CheckFollowTime.Time = CheckFollowPoolInterval;
+	var oneDay = 24*60*60*1000; 
+	var CurrentTime = (new Date()).getTime();
+	for(var i=FollowedPool.length - 1; i >= 0; i--)
+	{
+		var DiffDays = Math.round(Math.abs((CurrentTime - FollowedPool[i].followed_time)/(oneDay)));
+		if(DiffDays >= UnfollowAfterDays)
+		{
+			var user = FollowedPool.splice(i, 1);
+			if(user.length > 0)
+				AllFollowings.push(user[0]);
+		}
+	}	
+}
+
 function UpdateLoop()
 {
 	var CurrentTime = (new Date()).getTime() / 1000;
@@ -737,4 +779,6 @@ function UpdateLoop()
 	UpdateCollectFollowings(SecondsPassed);
 	UpdateFollow(SecondsPassed);
 	UpdateUnfollow(SecondsPassed);
+
+	CheckFollowPool(SecondsPassed);
 }
