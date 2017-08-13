@@ -169,7 +169,14 @@ function FollowUser(user)
       xhr.setRequestHeader("x-instagram-ajax", "1");
     },
     error: function (request, status, error) {
-        SendMessage("Error", "String", "FollowError");
+        var Error = {};
+        Error.String = "FollowError";
+        Error.Request = request;
+        Error.Status = status;
+        Error.AjaxError = error;
+        Error.ExtraData = user;
+
+        SendMessage("Error", "Error", Error);
     }
   })
   .done(function(msg){
@@ -187,7 +194,14 @@ function UnfollowUser(user)
       xhr.setRequestHeader("x-instagram-ajax", "1");
     },
     error: function (request, status, error) {
-        SendMessage("Error", "String", "UnfollowError");
+        var Error = {};
+        Error.String = "UnfollowError";
+        Error.Request = request;
+        Error.Status = status;
+        Error.AjaxError = error;
+        Error.ExtraData = user;
+
+        SendMessage("Error", "Error", Error);
     }
   })
   .done(function(msg){
@@ -225,7 +239,14 @@ function CollectFollowings(current_user_id, cursor_key, callback)
     url: userurl,
     method: "GET",
     error: function (request, status, error) {
-      SendMessage("Error", "String", "CollectFollowingError");
+        var Error = {};
+        Error.String = "CollectFollowingError";
+        Error.Request = request;
+        Error.Status = status;
+        Error.AjaxError = error;
+        Error.ExtraData = current_user_id;
+
+        SendMessage("Error", "Error", Error);
     }
   })
   .done(function(dataobj)
@@ -276,7 +297,14 @@ function CollectUsersFrom(user_id, cursor_key, callback)
     url: userurl,
     method: "GET",
     error: function (request, status, error) {
-      SendMessage("Error", "String", "CollectFollowersError");
+        var Error = {};
+        Error.String = "CollectFollowersError";
+        Error.Request = request;
+        Error.Status = status;
+        Error.AjaxError = error;
+        Error.ExtraData = user_id;
+
+        SendMessage("Error", "Error", Error);
     }
   })
   .done(function(dataobj)

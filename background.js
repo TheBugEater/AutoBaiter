@@ -237,7 +237,7 @@ function OnMessageReceive(msg)
 	}
 	else if(msg.Tag == "Error")
 	{
-		HandleErrors(msg.String);
+		HandleErrors(msg.Error);
 	}
 }
 
@@ -319,6 +319,15 @@ function IsAlreadyUnfollowed(user_id)
 	return false;
 }
 
+function DeleteUserIdInUserPool(user_id)
+{
+	for(var i = UserPool.length -1; i >= 0; i--)
+	{
+		if(UserPool[i].user_id == user_id)
+			UserPool.splice(i, 1);
+	}
+}
+
 function DeleteUserIdInFollowings(user_id)
 {
 	for(var i = AllFollowings.length -1; i >= 0; i--)
@@ -395,24 +404,28 @@ function IsNewUser(user)
 	return true;
 }
 
-function HandleErrors(string)
+function HandleErrors(error)
 {
-	if(string == "FollowError")
+	if(error.String == "FollowError")
 	{
 		FollowTime.Time = FollowSettings.ErrorTime;
+		DeleteUserIdInUserPool(error.ExtraData.user_id);
 	}
-	else if(string == "UnfollowError")
+	else if(error.String  == "UnfollowError")
 	{
 		UnfollowTime.Time = UnfollowSettings.ErrorTime;
+		DeleteUserIdInFollowings(error.ExtraData.user_id);
 	}
-	else if(string == "CollectFollowingError")
+	else if(error.String == "CollectFollowingError")
 	{
 		CollectFollowingsTime.Time = CollectFollowings.ErrorTime;
 	}
-	else if(string == "CollectFollowersError")
+	else if(error.String == "CollectFollowersError")
 	{
 		CollectUsersTime.Time = CollectFollowers.ErrorTime;
 	}
+
+	SaveDatabase();
 }
 
 function SetMinMax(value, min, max)
