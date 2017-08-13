@@ -127,7 +127,8 @@ function OnClickCollectFollowers()
       {
         var CollectJob = {};
         CollectJob.user_id = userdata.user_id;
-        CollectJob.cursorkey = null;
+        CollectJob.cursor_key = null;
+        CollectJob.user = userdata;
 
         SendMessage("AddCollectJob", "Job", CollectJob);
       }
@@ -142,7 +143,7 @@ function OnClickCollectFollowers()
 
 function DoCollectJob(CollectJob)
 {
-   CollectUsersFrom(CollectJob.user_id, CollectJob.cursor_key, function(users) {
+   CollectUsersFrom(CollectJob, function(users) {
 
       if(users.length > 0)
       {
@@ -278,18 +279,18 @@ function CollectFollowings(current_user_id, cursor_key, callback)
 
 }
 
-function CollectUsersFrom(user_id, cursor_key, callback)
+function CollectUsersFrom(job, callback)
 {
   var variables = {};
-  variables.id = user_id;
-  if(cursor_key)
+  variables.id = job.user_id;
+  if(job.cursor_key)
   {
-    variables.first = "10";
-    variables.after = cursor_key;
+    variables.first = "20";
+    variables.after = job.cursor_key;
   }
   else
   {
-    variables.first = "100";
+    variables.first = "20";
   }
   var userurl = "https://www.instagram.com/graphql/query/?query_id=17851374694183129&variables=" + JSON.stringify(variables);
 
@@ -302,7 +303,7 @@ function CollectUsersFrom(user_id, cursor_key, callback)
         Error.Request = request;
         Error.Status = status;
         Error.AjaxError = error;
-        Error.ExtraData = user_id;
+        Error.ExtraData = job.user_id;
 
         SendMessage("Error", "Error", Error);
     }
@@ -324,10 +325,15 @@ function CollectUsersFrom(user_id, cursor_key, callback)
     if(dataobj.data.user.edge_followed_by.page_info.has_next_page)
     {
       var CollectJob = {};
-      CollectJob.user_id = user_id; 
+      CollectJob.user_id = job.user_id; 
       CollectJob.cursor_key = dataobj.data.user.edge_followed_by.page_info.end_cursor; 
       CollectJob.eof = false;
-      SendMessage("AddCollectJob", "Job", CollectJob);
+      SendMessage("ModifyCollectJobCursor", "Job", CollectJob);
+    }
+    else
+    {
+      //Remove Job
+      SendMessage("RemoveCollectJob", "user_id", job.user_id);
     }
 
     callback(ExtractedUsers);

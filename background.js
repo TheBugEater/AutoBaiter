@@ -33,7 +33,7 @@ var CheckFollowTime;
 
 var LastUpdateTime = 0;
 var StatusUpdateInterval = 1;
-var CheckFollowPoolInterval = 5000;
+var CheckFollowPoolInterval = 300;
 
 var ComPortContent;
 var ComPortIndex;
@@ -58,11 +58,12 @@ function SettingsCollects(Pool, Interval, ErrorTime)
 	this.ErrorTime = ErrorTime;
 }
 
-function CollectJob(userid, cursorkey, eof)
+function CollectJob(userid, cursorkey, eof, user)
 {
 	this.user_id = userid;
 	this.cursor_key = cursorkey;
 	this.eof = eof;
+	this.user = user;
 }
 
 function User(username, user_id, full_name, user_pic_url, followed_time)
@@ -193,6 +194,10 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "RequestCollectJobStatus")
 	{
 		SendMessage("CollectJobStatus", "Status", IsCollectJobAvailableForUser(msg.user_id), ComPortContent);
+	}
+	else if(msg.Tag == "ModifyCollectJobCursor")
+	{
+		ModifyCollectJobCursor(msg.Job);
 	}
 	else if(msg.Tag == "RemoveCollectJob")
 	{
@@ -606,6 +611,18 @@ function UpdateCollectFollowingsJob(job)
 	CollectFollowingsJob = job;
 }
 
+function ModifyCollectJobCursor(job)
+{
+	for(var i=0; i < CollectJobs.length; i++)
+	{
+		if(CollectJobs[i].user_id == job.user_id)
+		{
+			CollectJobs[i].cursor_key = job.cursor_key;
+			break;
+		}
+	}
+}
+
 function AddCollectJob(job)
 {
 	CollectJobs.push(job);
@@ -721,6 +738,7 @@ function UpdateStatus(seconds)
 		value.FollowedPoolSize = FollowedPool.length;
 		value.UnfollowedPoolSize = UnfollowedPool.length;
 		value.CurrentUser = CurrentUser;
+		value.CollectJobs = CollectJobs;
 
 		SendMessage("StatusUpdate", "Status", value, ComPortIndex);
 	}
@@ -749,7 +767,7 @@ function UpdateCollectJob(seconds)
 		var index = GetCollectJobIndex(CollectJobs[getRandomInt(0, CollectJobs.length - 1)]);
 		if(index >= 0)
 		{
-			var job = CollectJobs.splice(index, 1);
+			var job = CollectJobs.slice(index, 1);
 			SendMessage("DoCollectJob", "Job", job[0], ComPortContent);
 		}
 	}

@@ -17,6 +17,10 @@ $(document).ready(function()
 				SetFollowValue($(this).is(':checked'));
 			});
 
+			$(document).on('click', '.remove-user-collect', function(){
+				RemoveCollectJobUser(this);
+			});
+
 			$("#set-unfollow-check").click(function()
 			{
 				SetUnfollowValue($(this).is(':checked'));
@@ -58,7 +62,7 @@ $(document).ready(function()
 				WhitelistFollowings();
 			});
 
-			$(document).on('click', '.remove-user', function(){
+			$(document).on('click', '.remove-user-whitelist', function(){
 				RemoveWhitelistedUser(this);
 			});
 
@@ -218,6 +222,14 @@ function RemoveWhitelistedUser(button)
 	SendMessage("RemoveWhitelistUser", "user_id", user_id);
 }
 
+function RemoveCollectJobUser(button)
+{
+	var user_id = $(button).attr("user_id");
+	$(button).closest("tr").remove();
+
+	SendMessage("RemoveCollectJob", "user_id", user_id);
+}
+
 function UpdateStatus(status)
 {
 	$("#user-pool-num").text(status.UserPoolSize);
@@ -230,6 +242,8 @@ function UpdateStatus(status)
 	}
 	$("#set-follow-check").prop("checked", status.StartFollow);
 	$("#set-unfollow-check").prop("checked", status.StartUnfollow);
+
+	UpdateCollectJobStatus(status.CollectJobs);
 }
 
 function FilterWhitelistSearch(input)
@@ -266,13 +280,33 @@ function AddedWhitelistUsers(users)
 		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
 		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
 		<td style="vertical-align: middle;">
-        <button class="btn-danger remove-user" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
+        <button class="btn-danger remove-user-whitelist" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
 		</tr>
 		`;
 		$(whitelist_block).prepend(userRow);
 	}
 
 	FilterWhitelistSearch($("#user-search"));
+}
+
+function UpdateCollectJobStatus(Jobs)
+{
+	var collect_block = $("#collect-users-block");
+	var collect_table = $(collect_block).find("tbody");
+	$(collect_table).empty();
+	for(var i = 0; i < Jobs.length; i++)
+	{
+		var user = Jobs[i].user;
+		var userRow = `
+		<tr>
+		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
+		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
+		<td style="vertical-align: middle;">
+        <button class="btn-danger remove-user-collect" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
+		</tr>
+		`;
+		$(collect_table).prepend(userRow);
+	}
 }
 
 function UpdateFollowStatus(AllUsers)
