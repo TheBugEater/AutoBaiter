@@ -865,7 +865,7 @@ function UpdateCollectJob(seconds)
 		var index = GetCollectJobIndex(CollectJobs[getRandomInt(0, CollectJobs.length - 1)]);
 		if(index >= 0)
 		{
-			var job = CollectJobs.slice(index, 1);
+			var job = CollectJobs.slice(index);
 			SendMessage("DoCollectJob", "Job", job[0], ComPortContent);
 		}
 	}

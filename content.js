@@ -1,6 +1,8 @@
 var ComPort;
 var CurrentUser;
 
+var LastUsername = "";
+
 $(document).ready(function()
 {
   CreateComPort();
@@ -35,16 +37,21 @@ function UpdateStates()
     return;
   }
 
+  // Username tag
+  var thisPageUser = $("._rf3jb").text();
+
   var IsDisplayed = $(collectDiv).is(':visible');      
-  if(IsDisplayed)
+  if(IsDisplayed && thisPageUser == LastUsername)
   {
     return;
   }
 
+  $(collectDiv).hide();
   GetCurrentPageUserData(function(userdata)
   {
     if(userdata)
     {
+      LastUsername = thisPageUser;
       SendMessage("RequestCollectJobStatus", "user_id", userdata.user_id);
     }
   });
