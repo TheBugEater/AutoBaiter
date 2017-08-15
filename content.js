@@ -368,10 +368,18 @@ function RetriveCurrentUserInfo()
   })
   .done(function(data) 
   {
-    CurrentUser.user_id = data.graphql.user.id;
-    CurrentUser.user_pic_url = data.graphql.user.profile_pic_url;
-    CurrentUser.username = data.graphql.user.username;
-    SendMessage("CurrentUserUpdate", "User", CurrentUser);
+    if(data.graphql)
+    {
+      CurrentUser.user_id = data.graphql.user.id;
+      CurrentUser.user_pic_url = data.graphql.user.profile_pic_url;
+      CurrentUser.username = data.graphql.user.username;
+      SendMessage("CurrentUserUpdate", "User", CurrentUser);
+    }
+    else
+    {
+      SendMessage("CurrentUserUpdate", "User", null);
+    }
+    
   }); 
 }
 

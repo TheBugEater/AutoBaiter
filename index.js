@@ -5,6 +5,7 @@ var DisplayFollowersNum = 10;
 
 $(document).ready(function()
 {
+	$("#overlay").show();
 	$("#sidebar-home").click(function()
 	{
 		$(".content-wrapper").empty();
@@ -71,10 +72,16 @@ $(document).ready(function()
 				FilterWhitelistSearch(this);
 			});
 
-			$("#whitelist-user").click(function(){
-    		});
-
 			SetActiveSidebarItem("#sidebar-whitelist");
+		});
+	});
+
+	$("#sidebar-help").click(function()
+	{
+		$(".content-wrapper").empty();
+		$(".content-wrapper").load("InstaBaiter/help.html", function()
+		{
+			SetActiveSidebarItem("#sidebar-help");
 		});
 	});
 
@@ -141,6 +148,15 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "UpdatedWhitelistUsers")
 	{
 		AddedWhitelistUsers(msg.Users);
+	}
+	else if(msg.Tag == "UserLoggedIn")
+	{
+		SendMessage("RequestFollowStatus", "Num", DisplayFollowersNum);
+		$("#overlay").hide();
+	}
+	else if(msg.Tag == "UserLoggedOut")
+	{
+		$("#overlay").show();
 	}
 }
 
@@ -313,6 +329,14 @@ function UpdateFollowStatus(AllUsers)
 {
 	var FollowedUsers = AllUsers.FollowedUsers;
 	var UnfollowedUsers = AllUsers.UnfollowedUsers;
+
+	var follow_block = $("#follow-block");
+	var follow_table = $(follow_block).find("tbody");
+	$(follow_table).empty()
+
+	var unfollow_block = $("#unfollow-block");
+	var unfollow_table = $(unfollow_block).find("tbody");
+	$(unfollow_table).empty();
 
 	for(var i=0; i < FollowedUsers.length; i++)
 	{

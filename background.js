@@ -35,6 +35,8 @@ var LastUpdateTime = 0;
 var StatusUpdateInterval = 1;
 var CheckFollowPoolInterval = 300;
 
+var UserLoggedIn = false;
+
 var ComPortContent;
 var ComPortIndex;
 
@@ -85,7 +87,6 @@ $(document).ready(function()
 	SetDefaultSettings();
 	SetTempSettings();
 	
-	LoadDatabase();
 })
 
 function SetTempSettings()
@@ -186,10 +187,6 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "AddCollectJob")
 	{
 		AddCollectJob(msg.Job);
-	}
-	else if(msg.Tag == "CollectFollowings")
-	{
-		CollectFollowingsJob = msg.Job;
 	}
 	else if(msg.Tag == "RequestCollectJobStatus")
 	{
@@ -441,6 +438,9 @@ function SetMinMax(value, min, max)
 
 function SaveDatabase()
 {
+	if(!CurrentUser)
+		return;
+
 	var Database = {};
 	Database.UserPool = JSON.stringify(UserPool);
 	Database.FollowedPool = JSON.stringify(FollowedPool);
@@ -459,14 +459,55 @@ function SaveDatabase()
 
 	Database.Settings = JSON.stringify(Settings);
 
-	chrome.storage.local.set({"InstaBaitDatabase": Database});
+
+	chrome.storage.local.get("InstaBaitDatabase", function(result)
+	{
+		var InstaBaitDatabase = result.InstaBaitDatabase;
+		if(!InstaBaitDatabase)
+			InstaBaitDatabase = [];
+
+		var IsNew = true;
+		for(var i = 0; i < InstaBaitDatabase.length; i++)
+		{
+			if(InstaBaitDatabase[i].user_id == CurrentUser.user_id)
+			{
+				InstaBaitDatabase[i].database = Database;
+				IsNew = false;
+				break;
+			}
+		}
+
+		if(IsNew)
+		{
+			var JSONDatabase = {};
+			JSONDatabase.user_id = CurrentUser.user_id;
+			JSONDatabase.database = Database;
+			InstaBaitDatabase.push(JSONDatabase);
+		}
+
+		chrome.storage.local.set({"InstaBaitDatabase": InstaBaitDatabase});
+	});
+
 }
 
 function LoadDatabase()
 {
 	chrome.storage.local.get("InstaBaitDatabase", function(result)
 	{
-		var Database = result.InstaBaitDatabase;
+		var InstaBaitDatabase = result.InstaBaitDatabase;
+		if(!InstaBaitDatabase)
+			InstaBaitDatabase = [];
+
+		var Database = null;
+		for(var i = 0; i < InstaBaitDatabase.length; i++)
+		{
+			if(InstaBaitDatabase[i].user_id == CurrentUser.user_id)
+			{
+				Database = InstaBaitDatabase[i].database;
+				break;
+			}
+		}
+
 		if(Database)
 		{
 			UserPool = JSON.parse(Database.UserPool);
@@ -483,6 +524,22 @@ function LoadDatabase()
 			CollectFollowers = Settings.CollectFollowers;
 			CollectFollowings = Settings.CollectFollowings;
 			UnfollowAfterDays = Settings.UnfollowAfterDays;
+		}
+		else
+		{
+			UserPool = [];
+			FollowedPool = [];
+			UnfollowedPool = [];
+			CollectJobs = [];
+			AllFollowings = [];
+			Whitelist = [];
+
+			CollectFollowingsJob = {};
+			CollectFollowingsJob.user_id = CurrentUser.user_id;
+			CollectFollowingsJob.cursor_key = null;
+			CollectFollowingsJob.eof = false;
+
+			SetDefaultSettings();
 		}
 	});
 }
@@ -576,6 +633,7 @@ function WhitelistFollowings()
 {
 	IsWhitelistFollowings = true;
 	CollectFollowingsJob.eof = false;
+	CollectFollowingsJob.cursor_key = null;
 	
 	for(var i=0; i < AllFollowings.length; i++)
 	{
@@ -710,18 +768,29 @@ function OnUnfollowedUser(user)
 
 function UpdateCurrentUser(user)
 {
+	if(!user)
+	{
+		if(CurrentUser)
+		{
+			SendMessage("UserLoggedOut", "User", CurrentUser, ComPortIndex);	
+			CurrentUser = null;
+			UserLoggedIn = false;
+		}
+		return;
+	}
+
+	// Don't login the same user twice
+	if(CurrentUser)
+	{
+		if(user.user_id == CurrentUser.user_id)
+			return;
+	}
+	
 	CurrentUser = user;
-	if(!CollectFollowingsJob)
-	{
-		CollectFollowingsJob = {};
-		CollectFollowingsJob.user_id = user.user_id;
-		CollectFollowingsJob.cursor_key = null;
-		CollectFollowingsJob.eof = false;
-	}
-	else
-	{
-		CollectFollowingsJob.eof = false;
-	}
+	UserLoggedIn = true;
+	SendMessage("UserLoggedIn", "User", user, ComPortIndex);	
+
+	LoadDatabase();
 }
 
 function UpdateStatus(seconds)
@@ -829,6 +898,9 @@ function CheckFollowPool(seconds)
 
 function UpdateLoop()
 {
+	if(!UserLoggedIn)
+		return;
+
 	var CurrentTime = (new Date()).getTime() / 1000;
 	var SecondsPassed = CurrentTime - LastUpdateTime;
 	LastUpdateTime = CurrentTime;
