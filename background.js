@@ -35,8 +35,9 @@ var LastUpdateTime = 0;
 var StatusUpdateInterval = 1;
 var CheckFollowPoolInterval = 300;
 
-var UserLoggedIn = false;
+var IsUserLoggedIn = false;
 
+var AllContentPorts = [];
 var ComPortContent;
 var ComPortIndex;
 
@@ -117,24 +118,47 @@ chrome.runtime.onConnect.addListener(function(port)
   if(port.name == "instafollow213content")
   {
 	ComPortContent = port;
+	AllContentPorts.push(ComPortContent);
 	port.onDisconnect.addListener(function()
 		{
-			ComPortContent = null;
+			for(var i=0; i < AllContentPorts.length; i++)
+			{
+				if(AllContentPorts[i] == port)
+				{
+					AllContentPorts.splice(i, 1);
+					break;
+				}
+			}
+
+			if(AllContentPorts.length == 0)
+			{
+				ComPortContent = null;
+				UserLoggedOut();
+			}
+			else
+			{
+				ComPortContent = AllContentPorts[0];
+			}
+		});
+
+	port.onMessage.addListener(function(msg)
+		{
+			ComPortContent = port;
+			OnMessageReceive(msg);
 		});
   }
   else if(port.name == "instafollow213index")
   {
   	ComPortIndex = port;
+
+	// Add a Listener for Message Passing
+	port.onMessage.addListener(OnMessageReceive);
+
 	port.onDisconnect.addListener(function()
 		{
 			ComPortIndex = null;
 		});  	
   }
-  else
-  	return;
-
-  // Add a Listener for Message Passing
-  port.onMessage.addListener(OnMessageReceive);
 });
 
 chrome.browserAction.onClicked.addListener(function(tab) {
@@ -766,15 +790,20 @@ function OnUnfollowedUser(user)
 	SaveDatabase();
 }
 
+function UserLoggedOut()
+{
+	SendMessage("UserLoggedOut", "User", CurrentUser, ComPortIndex);	
+	CurrentUser = null;
+	IsUserLoggedIn = false;
+}
+
 function UpdateCurrentUser(user)
 {
 	if(!user)
 	{
 		if(CurrentUser)
 		{
-			SendMessage("UserLoggedOut", "User", CurrentUser, ComPortIndex);	
-			CurrentUser = null;
-			UserLoggedIn = false;
+			UserLoggedOut();
 		}
 		return;
 	}
@@ -787,7 +816,7 @@ function UpdateCurrentUser(user)
 	}
 	
 	CurrentUser = user;
-	UserLoggedIn = true;
+	IsUserLoggedIn = true;
 	SendMessage("UserLoggedIn", "User", user, ComPortIndex);	
 
 	LoadDatabase();
@@ -898,7 +927,7 @@ function CheckFollowPool(seconds)
 
 function UpdateLoop()
 {
-	if(!UserLoggedIn)
+	if(!IsUserLoggedIn)
 		return;
 
 	var CurrentTime = (new Date()).getTime() / 1000;
