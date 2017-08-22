@@ -57,6 +57,8 @@ $(document).ready(function()
 		$(".content-wrapper").empty();
 		$(".content-wrapper").load("InstaBaiter/whitelist.html", function()
 		{
+			$('#AddUserToWhitelistModal').insertAfter($('body'));
+
 			SendMessage("RequestWhitelist", "", "");
 			$("#whitelist-followings").click(function()
 			{
@@ -67,9 +69,23 @@ $(document).ready(function()
 				RemoveWhitelistedUser(this);
 			});
 
+			$(document).on('click', '.add-whitelist-user', function(){
+				AddUserToWhitelist(this);
+			});
+
 			$("#user-search").keyup(function()
 			{
 				FilterWhitelistSearch(this);
+			});
+
+			$("#whitelist-user").click(function()
+			{
+				$("#AddUserToWhitelistModal").modal('show');
+			});
+
+			$("#add-user-search").keyup(function()
+			{
+				NewWhitelistUserSearch(this);
 			});
 
 			SetActiveSidebarItem("#sidebar-whitelist");
@@ -157,6 +173,10 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "UserLoggedOut")
 	{
 		$("#overlay").show();
+	}
+	else if(msg.Tag == "ReceiveFilteredFollowings")
+	{
+		ProcessFilteredFollowings(msg.Users);
 	}
 }
 
@@ -262,6 +282,15 @@ function UpdateStatus(status)
 	UpdateCollectJobStatus(status.CollectJobs);
 }
 
+function NewWhitelistUserSearch(input)
+{
+	var text = $(input).val().toLowerCase();
+	var Request = {};
+	Request.Text = text;
+	Request.Count = 20;
+	SendMessage("RequestFilteredFollowings", "Request", Request);
+}
+
 function FilterWhitelistSearch(input)
 {
 	var text = $(input).val().toLowerCase();
@@ -281,8 +310,35 @@ function FilterWhitelistSearch(input)
 
 function ClearWhitelistTable()
 {
-
 	$("#whitelisted-users").empty();
+}
+
+function AddUserToWhitelist(input)
+{
+	var user_id = $(input).attr("user_id");
+	$(input).closest("li").remove();
+	
+	SendMessage("AddUserToWhitelist", "user_id", user_id);
+}
+
+function ProcessFilteredFollowings(users)
+{
+	var filter_users_block = $("#add-user-results");
+	filter_users_block.empty();
+	for(var i=0; i<users.length; i++)
+	{
+		var user = users[i];
+		var userRow = `
+			<li class="add-whitelist-user" user_id=`+ user.user_id + `>
+			<div class="row">
+			<div class="col-md-2"><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></div>
+			<div class='col-md-5 align-mid-vertical text-instafollow-td'>` + user.username + `</div><div class='col-md-5 text-instafollow-td align-mid-vertical'>` + user.full_name + `</div>
+			</div>
+			</li>
+			`;
+
+		$(filter_users_block).append(userRow);
+	}
 }
 
 function AddedWhitelistUsers(users)

@@ -162,6 +162,10 @@
 	border-radius: 20px;
 }
 
+#AddUserToWhitelistModal
+{
+}
+
 .scroll-style::-webkit-scrollbar-track
 {
 	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
@@ -292,7 +296,7 @@
     right: 0;
     bottom: 0;
     background-color: rgba(0,0,0,0.95); /* Black background with opacity */
-    z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+    z-index: 9999; /* Specify a stack order in case you're using a different order for other elements */
 }
 #overlay-text {
 	position: absolute;
@@ -303,6 +307,61 @@
     transform: translate(-50%,-50%);
     -ms-transform: translate(-50%,-50%);
     color: #FFFFFF;
+}
+
+.addwhitelist-user-bg {
+	background-color: #242424 !important;
+	border-radius: 20px !important;
+}
+
+#add-user-results {
+	padding: 5px;
+	max-height: 500px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#add-user-results li {
+    display: block;
+    border: 2px solid;
+    border-color: #FFFFFF;
+    position: relative;
+    background-color: 242424;
+    padding: 5px;
+    width: 100%;
+   	margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#add-user-results li:hover {
+    display: block;
+    border: 2px solid;
+    border-color: #d85c35;
+    position: relative;
+    background-color: #242424;
+    padding: 5px;
+    width: 100%;
+   	margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#add-user-results li:active {
+    display: block;
+    border: 2px solid;
+    border-color: #d85c35;
+    position: relative;
+    background-color: #242424;
+    padding: 5px;
+    width: 100%;
+   	margin-top: 5px;
+    margin-bottom: 5px;
+    box-shadow: 0 5px #666;
+	transform: translateY(4px);
+}
+
+.modal-backdrop {
+   background-color: #505050;
+   opacity: 0.6;
 }
 /***************** External *******************/
 /* The switch - the box around the slider */

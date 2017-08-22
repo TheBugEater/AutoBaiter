@@ -261,6 +261,14 @@ function OnMessageReceive(msg)
 		RemoveWhitelistUser(msg.user_id);
 		SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
 	}
+	else if(msg.Tag == "AddUserToWhitelist")
+	{
+		AddUserToWhitelist(msg.user_id);
+	}
+	else if(msg.Tag == "RequestFilteredFollowings")
+	{
+		RequestFilteredFollowings(msg.Request);
+	}
 	else if(msg.Tag == "Error")
 	{
 		HandleErrors(msg.Error);
@@ -360,6 +368,33 @@ function DeleteUserIdInFollowings(user_id)
 	{
 		if(AllFollowings[i].user_id == user_id)
 			AllFollowings.splice(i, 1);
+	}
+}
+
+function DeleteUserIdInFollowedPool(user_id)
+{
+	for(var i = FollowedPool.length -1; i >= 0; i--)
+	{
+		if(FollowedPool[i].user_id == user_id)
+			FollowedPool.splice(i, 1);
+	}
+}
+
+function GetUserFromFollowedPool(user_id)
+{
+	for(var i = FollowedPool.length -1; i >= 0; i--)
+	{
+		if(FollowedPool[i].user_id == user_id)
+			return FollowedPool[i];
+	}
+}
+
+function GetUserFromFollowings(user_id)
+{
+	for(var i = AllFollowings.length -1; i >= 0; i--)
+	{
+		if(AllFollowings[i].user_id == user_id)
+			return AllFollowings[i];
 	}
 }
 
@@ -621,6 +656,40 @@ function SendSettings()
 	SendMessage("Settings", "Settings", Settings, ComPortIndex);
 }
 
+function RequestFilteredFollowings(request)
+{
+	var FilterList = [];
+	for(var i=0; i < AllFollowings.length; i++)
+	{
+		if(FilterList.length >= request.Count)
+		{
+			break;
+		}
+
+		var User = AllFollowings[i];
+		if(User.username.toLowerCase().indexOf(request.Text)  > 0 || User.full_name.toLowerCase().indexOf(request.Text)  > 0)
+		{
+			FilterList.push(User);
+		}
+	}
+
+	for(var i=0; i < FollowedPool.length; i++)
+	{
+		if(FilterList.length >= request.Count)
+		{
+			break;
+		}
+
+		var User = FollowedPool[i];
+		if(User.username.toLowerCase().indexOf(request.Text)  > 0 || User.full_name.toLowerCase().indexOf(request.Text)  > 0)
+		{
+			FilterList.push(User);
+		}
+	}
+
+	SendMessage("ReceiveFilteredFollowings", "Users", FilterList, ComPortIndex);
+}
+
 function AddFollowings(users)
 {
 	if(IsWhitelistFollowings)
@@ -688,6 +757,23 @@ function AddWhitelistUsers(users)
 	SaveDatabase();
 }
 
+function AddUserToWhitelist(user_id)
+{
+	var User = GetUserFromFollowings(user_id);
+	if(!User)
+	{
+		User = GetUserFromFollowedPool(user_id);
+	}
+
+	DeleteUserIdInFollowings(user_id);
+	DeleteUserIdInFollowedPool(user_id);
+
+	if(!IsUserInWhitelist(user_id))
+			Whitelist.push(User);
+
+	SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
+}
+
 function UpdateCollectFollowingsJob(job)
 {
 	CollectFollowingsJob = job;
@@ -753,6 +839,12 @@ function FollowUser(user)
 
 function UnfollowUser(user)
 {
+	if(IsUserInWhitelist(user.user_id))
+	{
+		DeleteUserIdInFollowings(user.user_id);
+		return;
+	}
+
 	if(IsAlreadyUnfollowed(user.user_id))
 	{
 		DeleteUserIdInFollowings(user.user_id);

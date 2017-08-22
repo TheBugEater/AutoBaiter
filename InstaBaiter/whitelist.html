@@ -27,11 +27,9 @@
 						<button class="btn btn-md pull-left btn-success button-settings" id="whitelist-followings" type="button">
 						<span class="glyphicon glyphicon-import"></span> Add All Followings
 						</button>
-						<!--
 						<button class="btn btn-md pull-right btn-success button-settings" id="whitelist-user" type="button">
 						<span class="glyphicon glyphicon-user"></span> Add User
 						</button>
-						-->
 						</div>
 					</div>
 				</div>
@@ -40,4 +38,27 @@
 			</div>
 		</div>
 	</div>
+</div>
+<div id="AddUserToWhitelistModal" class="modal fade" role="dialog">
+  		<div class="modal-dialog">
+	    	<!-- Modal content-->
+		    <div class="modal-content addwhitelist-user-bg">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal">&times;</button>
+		        <h4 class="modal-title text-instafollow">Add User to Whitelist</h4>
+		      </div>
+		      <div class="modal-body">
+		      <div class="row">
+						<div class="col-md-12">
+						<input type="text" class="form-control" id="add-user-search">
+						<ul id="add-user-results" class="scroll-style">
+						</ul>
+						</div>
+					</div>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>
+		      </div>
+		    </div>
+  		</div>
 </div>
