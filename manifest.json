@@ -13,7 +13,7 @@
   "content_scripts": [
   {
     "matches": ["*://*.instagram.com/*"],
-    "css": ["libs/bootstrap.min.css", "content.css"],
+    "css": ["libs/bootstrap.min.css", "libs/font-awesome.min.css", "content.css"],
     "js": ["libs/jquery.min.js", "content.js"]
   }],
 

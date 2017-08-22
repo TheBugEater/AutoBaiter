@@ -57,6 +57,8 @@ $(document).ready(function()
 		$(".content-wrapper").empty();
 		$(".content-wrapper").load("InstaBaiter/whitelist.html", function()
 		{
+			SendMessage("RequestWhitelistStatus", "", "");
+
 			$('#AddUserToWhitelistModal').insertAfter($('body'));
 
 			SendMessage("RequestWhitelist", "", "");
@@ -80,6 +82,8 @@ $(document).ready(function()
 
 			$("#whitelist-user").click(function()
 			{
+				$("#add-user-results").empty();
+				$("#add-user-search").val("");
 				$("#AddUserToWhitelistModal").modal('show');
 			});
 
@@ -178,6 +182,10 @@ function OnMessageReceive(msg)
 	{
 		ProcessFilteredFollowings(msg.Users);
 	}
+	else if(msg.Tag == "ReceiveWhitelistStatus")
+	{
+		SetWhitelistStatus(msg.Status);
+	}
 }
 
 function SetSettings(settings)
@@ -247,7 +255,16 @@ function SetUnfollowValue(value)
 
 function WhitelistFollowings()
 {
+	$("#whitelist-followings").button("loading");
 	SendMessage("WhitelistFollowings", "", "");
+}
+
+function SetWhitelistStatus(status)
+{
+	if(status.Enabled)
+		$("#whitelist-followings").button("loading");
+	else
+		$("#whitelist-followings").button("reset");
 }
 
 function RemoveWhitelistedUser(button)

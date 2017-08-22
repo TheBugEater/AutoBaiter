@@ -269,6 +269,10 @@ function OnMessageReceive(msg)
 	{
 		RequestFilteredFollowings(msg.Request);
 	}
+	else if(msg.Tag == "RequestWhitelistStatus")
+	{
+		SendWhitelistStatus();
+	}
 	else if(msg.Tag == "Error")
 	{
 		HandleErrors(msg.Error);
@@ -659,35 +663,46 @@ function SendSettings()
 function RequestFilteredFollowings(request)
 {
 	var FilterList = [];
-	for(var i=0; i < AllFollowings.length; i++)
+
+	if(request.Text != "")
 	{
-		if(FilterList.length >= request.Count)
+		for(var i=0; i < AllFollowings.length; i++)
 		{
-			break;
+			if(FilterList.length >= request.Count)
+			{
+				break;
+			}
+
+			var User = AllFollowings[i];
+			if(User.username.toLowerCase().indexOf(request.Text)  >= 0 || User.full_name.toLowerCase().indexOf(request.Text)  >= 0)
+			{
+				FilterList.push(User);
+			}
 		}
 
-		var User = AllFollowings[i];
-		if(User.username.toLowerCase().indexOf(request.Text)  > 0 || User.full_name.toLowerCase().indexOf(request.Text)  > 0)
+		for(var i=0; i < FollowedPool.length; i++)
 		{
-			FilterList.push(User);
-		}
-	}
+			if(FilterList.length >= request.Count)
+			{
+				break;
+			}
 
-	for(var i=0; i < FollowedPool.length; i++)
-	{
-		if(FilterList.length >= request.Count)
-		{
-			break;
-		}
-
-		var User = FollowedPool[i];
-		if(User.username.toLowerCase().indexOf(request.Text)  > 0 || User.full_name.toLowerCase().indexOf(request.Text)  > 0)
-		{
-			FilterList.push(User);
+			var User = FollowedPool[i];
+			if(User.username.toLowerCase().indexOf(request.Text)  >= 0 || User.full_name.toLowerCase().indexOf(request.Text)  >= 0)
+			{
+				FilterList.push(User);
+			}
 		}
 	}
 
 	SendMessage("ReceiveFilteredFollowings", "Users", FilterList, ComPortIndex);
+}
+
+function SendWhitelistStatus()
+{
+	var Status = {};
+	Status.Enabled = IsWhitelistFollowings;
+	SendMessage("ReceiveWhitelistStatus", "Status", Status, ComPortIndex);
 }
 
 function AddFollowings(users)
@@ -698,6 +713,7 @@ function AddFollowings(users)
 		if(CollectFollowingsJob && CollectFollowingsJob.eof)
 		{
 			IsWhitelistFollowings = false;
+			SendWhitelistStatus();
 		}
 		return;
 	}
@@ -772,6 +788,8 @@ function AddUserToWhitelist(user_id)
 			Whitelist.push(User);
 
 	SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
+
+	SaveDatabase();
 }
 
 function UpdateCollectFollowingsJob(job)
