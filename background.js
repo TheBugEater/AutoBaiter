@@ -587,6 +587,12 @@ function LoadDatabase()
 			CollectFollowers = Settings.CollectFollowers;
 			CollectFollowings = Settings.CollectFollowings;
 			UnfollowAfterDays = Settings.UnfollowAfterDays;
+
+			if(CollectFollowingsJob.eof)
+			{
+				CollectFollowingsJob.eof = false;
+				CollectFollowingsJob.cursor_key = null;
+			}
 		}
 		else
 		{
@@ -927,6 +933,7 @@ function UpdateCurrentUser(user)
 	
 	CurrentUser = user;
 	IsUserLoggedIn = true;
+
 	SendMessage("UserLoggedIn", "User", user, ComPortIndex);	
 
 	LoadDatabase();
