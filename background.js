@@ -273,6 +273,14 @@ function OnMessageReceive(msg)
 	{
 		SendWhitelistStatus();
 	}
+	else if(msg.Tag == "ImportDatabase")
+	{
+		ImportDatabase(msg.Database);
+	}
+	else if(msg.Tag == "ExportDatabase")
+	{
+		ExportDatabase();
+	}
 	else if(msg.Tag == "Error")
 	{
 		HandleErrors(msg.Error);
@@ -498,6 +506,41 @@ function SetMinMax(value, min, max)
 	return Math.min(Math.max(value, min), max);
 }
 ///////////////////////////////////////////////////////////////
+
+function ExportDatabase()
+{
+	chrome.storage.local.get("InstaBaitDatabase", function(result)
+	{
+		var InstaBaitDatabase = result.InstaBaitDatabase;
+		if(!InstaBaitDatabase)
+			InstaBaitDatabase = [];
+
+		var File = {};
+		File.Tag = "InstaBaiterExportedFile";
+		File.Content = InstaBaitDatabase;
+
+		var url = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(File))));
+		chrome.downloads.download({
+	    url: url,
+	    filename: "InstaBaiterDatabase.json",
+	    saveAs: true
+	    });
+	});
+}
+
+function ImportDatabase(database)
+{
+	var File = JSON.parse(database);
+	if(File.Tag == "InstaBaiterExportedFile")
+	{
+		chrome.storage.local.set({"InstaBaitDatabase": File.Content});
+		LoadDatabase();
+
+		SendSettings();
+
+		alert("Loaded Database Successfully!");
+	}
+}
 
 function SaveDatabase()
 {

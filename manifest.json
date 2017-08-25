@@ -24,6 +24,7 @@
   "permissions": [
     "tabs", "*://*.instagram.com/*",
     "storage",
-    "webNavigation"
+    "webNavigation",
+    "downloads"
   ]
 }

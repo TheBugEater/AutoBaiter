@@ -48,6 +48,20 @@ $(document).ready(function()
 				SaveSettings();
 			});
 
+			$(document).on('change', '#import-file-input', function(event){
+				ImportDatabase(event);
+			});
+
+			$("#import-database").click(function()
+			{
+				$("#import-file-input").click();
+			});
+			
+			$("#export-database").click(function()
+			{
+				SendMessage("ExportDatabase", "", "");
+			});
+
 			SetActiveSidebarItem("#sidebar-settings");
 		});
 	});
@@ -185,6 +199,21 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "ReceiveWhitelistStatus")
 	{
 		SetWhitelistStatus(msg.Status);
+	}
+}
+
+function ImportDatabase(event)
+{
+	var file = event.target.files[0];
+	if(file)
+	{
+		var fileReader = new FileReader();
+		fileReader.onload = function(event)
+		{
+			var content = event.target.result;
+			SendMessage("ImportDatabase", "Database", content);
+		}
+		fileReader.readAsText(file);
 	}
 }
 
