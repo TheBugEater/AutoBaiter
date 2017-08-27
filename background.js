@@ -533,12 +533,12 @@ function ImportDatabase(database)
 	var File = JSON.parse(database);
 	if(File.Tag == "InstaBaiterExportedFile")
 	{
-		chrome.storage.local.set({"InstaBaitDatabase": File.Content});
-		LoadDatabase();
-
-		SendSettings();
-
-		alert("Loaded Database Successfully!");
+		chrome.storage.local.set({"InstaBaitDatabase": File.Content}, function()
+		{
+			LoadDatabase();
+			SendSettings();
+			alert("Loaded Database Successfully!");
+		});
 	}
 }
 
@@ -723,7 +723,7 @@ function RequestFilteredFollowings(request)
 			}
 
 			var User = AllFollowings[i];
-			if(User.username.toLowerCase().indexOf(request.Text)  >= 0 || User.full_name.toLowerCase().indexOf(request.Text)  >= 0)
+			if(User.username.toLowerCase().indexOf(request.Text)  == 0 || User.full_name.toLowerCase().indexOf(request.Text)  == 0)
 			{
 				FilterList.push(User);
 			}
@@ -737,7 +737,7 @@ function RequestFilteredFollowings(request)
 			}
 
 			var User = FollowedPool[i];
-			if(User.username.toLowerCase().indexOf(request.Text)  >= 0 || User.full_name.toLowerCase().indexOf(request.Text)  >= 0)
+			if(User.username.toLowerCase().indexOf(request.Text)  == 0 || User.full_name.toLowerCase().indexOf(request.Text)  == 0)
 			{
 				FilterList.push(User);
 			}

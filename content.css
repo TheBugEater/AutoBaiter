@@ -363,6 +363,16 @@
    background-color: #505050;
    opacity: 0.6;
 }
+
+#help-disclaimer 
+{
+	bottom: 50px;
+	left: 20px;
+	position: absolute;
+	color: #a51717;
+	font-family: "Ubuntu";
+	font-weight: bold;
+}
 /***************** External *******************/
 /* The switch - the box around the slider */
 .switch {
