@@ -281,6 +281,10 @@ function OnMessageReceive(msg)
 	{
 		ExportDatabase();
 	}
+	else if(msg.Tag == "ResetAll")
+	{
+		ResetAll();
+	}
 	else if(msg.Tag == "Error")
 	{
 		HandleErrors(msg.Error);
@@ -540,6 +544,19 @@ function ImportDatabase(database)
 			alert("Loaded Database Successfully!");
 		});
 	}
+}
+
+function ResetAll()
+{
+	UserPool = [];
+	FollowedPool = [];
+	UnfollowedPool = [];
+	CollectJobs = [];
+	CollectFollowingsJob = null;
+	AllFollowings = [];
+
+	// Should we clear Whitelist ?
+	SaveDatabase();
 }
 
 function SaveDatabase()

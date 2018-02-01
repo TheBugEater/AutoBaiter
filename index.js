@@ -62,6 +62,11 @@ $(document).ready(function()
 				SendMessage("ExportDatabase", "", "");
 			});
 
+			$("#reset-all").click(function()
+			{
+				SendMessage("ResetAll", "", "");
+			});
+
 			SetActiveSidebarItem("#sidebar-settings");
 		});
 	});
