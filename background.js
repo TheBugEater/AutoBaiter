@@ -6,7 +6,7 @@ var AllFollowings = [];
 var Whitelist = [];
 
 var CollectJobs = [];
-var CollectFollowingsJob;
+var CollectFollowingsJob = {};
 
 var CurrentUser;
 
@@ -552,7 +552,7 @@ function ResetAll()
 	FollowedPool = [];
 	UnfollowedPool = [];
 	CollectJobs = [];
-	CollectFollowingsJob = null;
+	CollectFollowingsJob = {};
 	AllFollowings = [];
 
 	// Should we clear Whitelist ?
@@ -810,6 +810,7 @@ function WhitelistFollowings(start)
 	{
 
 		IsWhitelistFollowings = true;
+		CollectFollowingsJob = {};
 		CollectFollowingsJob.eof = false;
 		CollectFollowingsJob.cursor_key = null;
 	
