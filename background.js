@@ -250,7 +250,7 @@ function OnMessageReceive(msg)
 	}
 	else if(msg.Tag == "WhitelistFollowings")
 	{
-		WhitelistFollowings();
+		WhitelistFollowings(msg.Start);
 	}
 	else if(msg.Tag == "RequestWhitelist")
 	{
@@ -804,22 +804,31 @@ function AddFollowings(users)
 	SaveDatabase();
 }
 
-function WhitelistFollowings()
+function WhitelistFollowings(start)
 {
-	IsWhitelistFollowings = true;
-	CollectFollowingsJob.eof = false;
-	CollectFollowingsJob.cursor_key = null;
-	
-	for(var i=0; i < AllFollowings.length; i++)
+	if(start)
 	{
-		var user = AllFollowings[i];
-		// If User is already in whitelist don't duplicate
-		if(!IsUserInWhitelist(user.user_id))
-			Whitelist.push(user);
-	}
 
-	AllFollowings.length = 0;
-	SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
+		IsWhitelistFollowings = true;
+		CollectFollowingsJob.eof = false;
+		CollectFollowingsJob.cursor_key = null;
+	
+		for(var i=0; i < AllFollowings.length; i++)
+		{
+			var user = AllFollowings[i];
+			// If User is already in whitelist don't duplicate
+			if(!IsUserInWhitelist(user.user_id))
+				Whitelist.push(user);
+		}
+
+		AllFollowings.length = 0;
+		SendMessage("AddedWhitelistUsers", "Users", Whitelist, ComPortIndex);
+	}
+	else
+	{
+		IsWhitelistFollowings = false;
+		SendWhitelistStatus();
+	}
 
 	SaveDatabase();
 }

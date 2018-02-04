@@ -309,7 +309,7 @@
     color: #FFFFFF;
 }
 
-.addwhitelist-user-bg {
+.modal-user-bg {
 	background-color: #242424 !important;
 	border-radius: 20px !important;
 }
@@ -362,6 +362,7 @@
 .modal-backdrop {
    background-color: #505050;
    opacity: 0.6;
+   z-index: -1;
 }
 
 #help-disclaimer 
