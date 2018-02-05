@@ -1,7 +1,7 @@
-# InstaBaiter
+# AutoBaiter
 Bait them and Gain Them
 
-Gain Instagram Followers for Free.  
+Gain Autogram Followers for Free.  
 Features:   
     ► Choose a user to collect followers.   
     ► Schedule unfollow.   

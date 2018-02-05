@@ -39,10 +39,11 @@ $(document).ready(function()
 			SendMessage("RequestSettings", "", "");
 			
 			var modal = $('body').siblings("#confirm-reset-modal");
-			if(modal.length < 1)
+			if(modal.length > 0)
 			{
-				$('#confirm-reset-modal').insertAfter($('body'));
+				modal.remove();
 			}
+			$('#confirm-reset-modal').insertAfter($('body'));
 
 			$("#default-settings").click(function()
 			{
@@ -90,10 +91,11 @@ $(document).ready(function()
 			SendMessage("RequestWhitelistStatus", "", "");
 
 			var modal = $('body').siblings("#AddUserToWhitelistModal");
-			if(modal.length < 1)
+			if(modal.length > 0)
 			{
-				$('#AddUserToWhitelistModal').insertAfter($('body'));
+				modal.remove();
 			}
+			$('#AddUserToWhitelistModal').insertAfter($('body'));
 
 			SendMessage("RequestWhitelist", "", "");
 			$("#whitelist-followings").click(function()
