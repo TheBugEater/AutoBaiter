@@ -828,8 +828,8 @@ function WhitelistFollowings(start)
 	else
 	{
 		IsWhitelistFollowings = false;
-		SendWhitelistStatus();
 	}
+	SendWhitelistStatus();
 
 	SaveDatabase();
 }

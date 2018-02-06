@@ -312,6 +312,14 @@ function WhitelistFollowings(start)
 function SetWhitelistStatus(status)
 {
 	$("#whitelist-followings").prop("checked", status.Enabled);
+	if(status.Enabled)
+	{
+		$("#whitelist-followings-text").text("Adding all Followings, Please Wait...");
+	}
+	else
+	{
+		$("#whitelist-followings-text").text("Add all Followings");
+	}
 }
 
 function RemoveWhitelistedUser(button)
