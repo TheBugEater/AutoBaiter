@@ -9,7 +9,7 @@ $(document).ready(function()
 	$("#sidebar-home").click(function()
 	{
 		$(".content-wrapper").empty();
-		$(".content-wrapper").load("InstaBaiter/home.html", function()
+		$(".content-wrapper").load("AutoBaiter/home.html", function()
 		{
 			SendMessage("RequestFollowStatus", "Num", DisplayFollowersNum);
 
@@ -34,7 +34,7 @@ $(document).ready(function()
 	$("#sidebar-settings").click(function()
 	{
 		$(".content-wrapper").empty();
-		$(".content-wrapper").load("InstaBaiter/settings.html", function()
+		$(".content-wrapper").load("AutoBaiter/settings.html", function()
 		{
 			SendMessage("RequestSettings", "", "");
 			
@@ -86,7 +86,7 @@ $(document).ready(function()
 	$("#sidebar-whitelist").click(function()
 	{
 		$(".content-wrapper").empty();
-		$(".content-wrapper").load("InstaBaiter/whitelist.html", function()
+		$(".content-wrapper").load("AutoBaiter/whitelist.html", function()
 		{
 			SendMessage("RequestWhitelistStatus", "", "");
 
@@ -135,7 +135,7 @@ $(document).ready(function()
 	$("#sidebar-help").click(function()
 	{
 		$(".content-wrapper").empty();
-		$(".content-wrapper").load("InstaBaiter/help.html", function()
+		$(".content-wrapper").load("AutoBaiter/help.html", function()
 		{
 			SetActiveSidebarItem("#sidebar-help");
 		});
