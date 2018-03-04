@@ -163,8 +163,10 @@ function DoCollectJob(CollectJob)
 function RetriveUserHeaders()
 {
   var CSRF = getCookie("csrftoken");
+  var user_id = getCookie("ds_user_id");
   CurrentUser = {"CSRF": CSRF};
-  RetriveCurrentUserInfo();
+  
+  RetriveCurrentUserInfo(user_id);
 }
 
 function FollowUser(user)
@@ -367,19 +369,26 @@ function GetCurrentPageUserData(callback)
   });
 }
 
-function RetriveCurrentUserInfo()
+function RetriveCurrentUserInfo(user_id)
 {
+  var variables = {};
+  variables.user_id = user_id;
+  variables.include_reel = true
+
+  var userurl = "https://www.instagram.com/graphql/query/?query_hash=50c4cc299a5ed4c38421f66dbbf0e3d0&variables=" + JSON.stringify(variables);
+
   $.ajax({
+    url: userurl,
     method: "GET",
-    url: "https://www.instagram.com/?__a=1"
   })
-  .done(function(data) 
+  .done(function(response)
   {
-    if(data.graphql)
+    if(response.data.user.reel.user)
     {
-      CurrentUser.user_id = data.graphql.user.id;
-      CurrentUser.user_pic_url = data.graphql.user.profile_pic_url;
-      CurrentUser.username = data.graphql.user.username;
+      var user = response.data.user.reel.user;
+      CurrentUser.user_id = user.id;
+      CurrentUser.user_pic_url = user.profile_pic_url;
+      CurrentUser.username = user.username;
       SendMessage("CurrentUserUpdate", "User", CurrentUser);
     }
     else
