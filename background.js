@@ -664,12 +664,13 @@ function LoadDatabase()
 			Whitelist = [];
 
 			CollectFollowingsJob = {};
-			CollectFollowingsJob.user_id = CurrentUser.user_id;
 			CollectFollowingsJob.cursor_key = null;
 			CollectFollowingsJob.eof = false;
 
 			SetDefaultSettings();
 		}
+
+		CollectFollowingsJob.user_id = CurrentUser.user_id;
 	});
 }
 
@@ -813,6 +814,7 @@ function WhitelistFollowings(start)
 		CollectFollowingsJob = {};
 		CollectFollowingsJob.eof = false;
 		CollectFollowingsJob.cursor_key = null;
+		CollectFollowingsJob.user_id = CurrentUser.user_id;
 	
 		for(var i=0; i < AllFollowings.length; i++)
 		{
@@ -1035,7 +1037,8 @@ function UpdateCollectFollowings(seconds)
 		return;
 
 	CollectFollowingsTime.Time -= seconds;
-	if(!CollectFollowingsJob.eof && CollectFollowingsTime.Time < 0 && CollectFollowingsJob && ((CollectFollowings.Pool > AllFollowings.length) || IsWhitelistFollowings))
+	if(CollectFollowingsTime.Time < 0 && CollectFollowingsJob && CollectFollowingsJob.user_id && !CollectFollowingsJob.eof && 
+		((CollectFollowings.Pool > AllFollowings.length) || IsWhitelistFollowings))
 	{
 		CollectFollowingsTime.Time = CollectFollowings.Interval;
 		SendMessage("DoCollectFollowings", "Job", CollectFollowingsJob, ComPortContent);
