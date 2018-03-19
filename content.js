@@ -29,6 +29,7 @@ function getCookie(name) {
 
 function UpdateStates()
 {
+  debugger;
   var collectDiv = $("#instabaiter-inject");
   var userPage = $("a[href$='/followers/']");
   if(userPage.length <= 0)
@@ -357,9 +358,10 @@ function GetCurrentPageUserData(callback)
   })
   .done(function(data) 
   {
-    if(data.user && data.user.username)
+    if(data.graphql.user && data.graphql.user.username)
     {
-      var UserData = {"username": data.user.username, "user_id": data.user.id, "full_name": data.user.full_name, "user_pic_url": data.user.profile_pic_url};
+      var user = data.graphql.user;
+      var UserData = {"username": user.username, "user_id": user.id, "full_name": user.full_name, "user_pic_url": user.profile_pic_url};
       callback(UserData);
     }
     else
