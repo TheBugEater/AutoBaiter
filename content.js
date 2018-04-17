@@ -2,12 +2,14 @@ var ComPort;
 var CurrentUser;
 
 var LastUsername = "";
+var SharedData = null;
 
 $(document).ready(function()
 {
   CreateComPort();
   RetriveUserHeaders();
   CreateCollectFollowersButton();
+  InjectSharedDataExtracter();
 
   setInterval(UpdateStates, 2000);
  });
@@ -27,9 +29,20 @@ function getCookie(name) {
  return cookieValue;
 }
 
+function getSharedData()
+{
+  var sendObj = {"Tag": "SharedData"};
+  sendObj["SharedData"] = window._sharedData;
+  window.postMessage(sendObj,"*");
+}
+
+function InjectSharedDataExtracter()
+{
+  $('body').append(`<script>(` + getSharedData + `)();</script>`);
+}
+
 function UpdateStates()
 {
-  debugger;
   var collectDiv = $("#instabaiter-inject");
   var userPage = $("a[href$='/followers/']");
   if(userPage.length <= 0)
@@ -48,7 +61,7 @@ function UpdateStates()
   }
 
   $(collectDiv).hide();
-  GetCurrentPageUserData(function(userdata)
+  GetCurrentPageUserData(thisPageUser, function(userdata)
   {
     if(userdata)
     {
@@ -63,6 +76,18 @@ function CreateComPort()
 {
   ComPort = chrome.runtime.connect({name: "instafollow213content"});
   ComPort.onMessage.addListener(OnMessageReceive);
+
+  window.addEventListener("message", function(event) 
+  {
+    // We only accept messages from ourselves
+    if (event.source != window)
+      return;
+
+    if (event.data.Tag && (event.data.Tag == "SharedData")) 
+    {
+      SharedData = event.data.SharedData;
+    }
+  }, false);
 }
 
 function SendMessage(tag, msgTag, msg)
@@ -127,7 +152,8 @@ function CreateCollectFollowersButton()
 
 function OnClickCollectFollowers()
 {
-    GetCurrentPageUserData(function(userdata){
+    var thisPageUser = $("._rf3jb").text();
+    GetCurrentPageUserData(thisPageUser, function(userdata){
 
       var collectButton = $("#collect-followers-instafollow");
       $(collectButton).prop('disabled', true);
@@ -350,25 +376,22 @@ function CollectUsersFrom(job, callback)
   });
 }
 
-function GetCurrentPageUserData(callback)
+function GetCurrentPageUserData(currentPageUser, callback)
 {
-  $.ajax({
-    method: "GET",
-    url: window.location.href + "?__a=1"
-  })
-  .done(function(data) 
+  if(SharedData)
   {
-    if(data.graphql.user && data.graphql.user.username)
+    for(var i=0; i < SharedData.entry_data.ProfilePage.length; i++)
     {
-      var user = data.graphql.user;
-      var UserData = {"username": user.username, "user_id": user.id, "full_name": user.full_name, "user_pic_url": user.profile_pic_url};
-      callback(UserData);
-    }
-    else
-    {
-      callback(null);
-    }
-  });
+        var user = SharedData.entry_data.ProfilePage[i].graphql.user;
+        if(user && user.username == currentPageUser)
+        {
+          var UserData = {"username": user.username, "user_id": user.id, "full_name": user.full_name, "user_pic_url": user.profile_pic_url};
+          callback(UserData);
+          return;
+        }
+    }  
+  }
+  callback(null);
 }
 
 function RetriveCurrentUserInfo(user_id)
