@@ -52,7 +52,7 @@ function UpdateStates()
   }
 
   // Username tag
-  var thisPageUser = $("._rf3jb").text();
+  var thisPageUser = $(".AC5d8").text();
 
   var IsDisplayed = $(collectDiv).is(':visible');      
   if(IsDisplayed && thisPageUser == LastUsername)
