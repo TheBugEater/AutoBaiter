@@ -152,7 +152,7 @@ function CreateCollectFollowersButton()
 
 function OnClickCollectFollowers()
 {
-    var thisPageUser = $("._rf3jb").text();
+    var thisPageUser = $(".AC5d8").text();
     GetCurrentPageUserData(thisPageUser, function(userdata){
 
       var collectButton = $("#collect-followers-instafollow");

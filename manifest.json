@@ -3,7 +3,7 @@
 
   "name": "AutoBaiter",
   "description": "Get Instagram™ Followers for free.",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "icons": { "512": "icon.png" },
 
   "browser_action": {
