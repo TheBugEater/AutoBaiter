@@ -1,9 +1,13 @@
 var UserPool = [];
+var TagPool = [];
 
 var FollowedPool = [];
 var UnfollowedPool = [];
 var AllFollowings = [];
 var Whitelist = [];
+var LikedMedia = [];
+
+var MediaPool = [];
 
 var CollectJobs = [];
 var CollectFollowingsJob = {};
@@ -30,6 +34,8 @@ var CollectUsersTime;
 var CollectFollowingsTime;
 var StatusUpdateTime;
 var CheckFollowTime;
+var CollectMediaTime;
+var LikeOrCommentTime;
 
 var LastUpdateTime = 0;
 var StatusUpdateInterval = 1;
@@ -78,6 +84,12 @@ function User(username, user_id, full_name, user_pic_url, followed_time)
 	this.followed_time = followed_time;
 }
 
+function MediaTag(tag_name, cursor_key, eof)
+{
+	this.tag_name = tag_name;
+	this.cursor_key = cursor_key;
+	this.eof = eof;
+}
 
 $(document).ready(function()
 {
@@ -87,7 +99,6 @@ $(document).ready(function()
 	//chrome.storage.local.clear();
 	SetDefaultSettings();
 	SetTempSettings();
-	
 })
 
 function SetTempSettings()
@@ -98,6 +109,8 @@ function SetTempSettings()
 	CollectFollowingsTime = new TempTimeValues(0, 0);
 	StatusUpdateTime = new TempTimeValues(0, 0);
 	CheckFollowTime = new TempTimeValues(0, 0);
+	CollectMediaTime = new TempTimeValues(0,0);
+	LikeOrCommentTime = new TempTimeValues(0,0);
 
 	LastUpdateTime = (new Date()).getTime() / 1000;
 }
@@ -192,6 +205,10 @@ function OnMessageReceive(msg)
 	{
 		OnFollowedUser(msg.User);
 	}
+	else if(msg.Tag == "LikedMedia")
+	{
+		OnLikedMedia(msg.Media);
+	}
 	else if(msg.Tag == "RequestFollowStatus")
 	{
 		SendFollowStatus(msg.Num);
@@ -228,6 +245,10 @@ function OnMessageReceive(msg)
 	{
 		UpdateCollectFollowingsJob(msg.Job);	
 	}
+	else if(msg.Tag == "AddMedia")
+	{
+		AddMedia(msg.Medias);
+	}
 	else if(msg.Tag == "AddFollowings")
 	{
 		AddFollowings(msg.Users);
@@ -247,6 +268,14 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "ResetSettings")
 	{
 		ResetSettings();
+	}
+	else if(msg.Tag == "AddTagToList")
+	{
+		AddTagToList(msg.TagName);
+	}
+	else if(msg.Tag == "RemoveTagFromList")
+	{
+		RemoveTagFromList(msg.TagName);
 	}
 	else if(msg.Tag == "WhitelistFollowings")
 	{
@@ -272,6 +301,17 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "RequestWhitelistStatus")
 	{
 		SendWhitelistStatus();
+	}
+	else if(msg.Tag == "RequestMediaStatus")
+	{
+		var Status = {};
+		Status.LikedMedias = LikedMedia;
+		Status.Tags = TagPool;
+		SendMessage("UpdateMediaStatus", "Status", Status, ComPortIndex);
+	}
+	else if(msg.Tag == "UpdateCollectMediaJob")
+	{
+		UpdateTagJob(msg.Job);
 	}
 	else if(msg.Tag == "ImportDatabase")
 	{
@@ -554,6 +594,7 @@ function ResetAll()
 	CollectJobs = [];
 	CollectFollowingsJob = {};
 	AllFollowings = [];
+	TagPool = [];
 
 	// Should we clear Whitelist ?
 	SaveDatabase();
@@ -572,6 +613,7 @@ function SaveDatabase()
 	Database.CollectFollowingsJob = JSON.stringify(CollectFollowingsJob);
 	Database.AllFollowings = JSON.stringify(AllFollowings);
 	Database.Whitelist = JSON.stringify(Whitelist);
+	Database.TagPool = JSON.stringify(TagPool);
 
 	var Settings = {};
 	Settings.FollowSettings = FollowSettings;
@@ -640,6 +682,7 @@ function LoadDatabase()
 			CollectFollowingsJob = JSON.parse(Database.CollectFollowingsJob);
 			AllFollowings = JSON.parse(Database.AllFollowings);
 			Whitelist = JSON.parse(Database.Whitelist);
+			TagPool = JSON.parse(Database.TagPool);
 
 			var Settings = JSON.parse(Database.Settings);
 			FollowSettings = Settings.FollowSettings;
@@ -662,6 +705,7 @@ function LoadDatabase()
 			CollectJobs = [];
 			AllFollowings = [];
 			Whitelist = [];
+			TagPool = [];
 
 			CollectFollowingsJob = {};
 			CollectFollowingsJob.cursor_key = null;
@@ -771,6 +815,60 @@ function SendWhitelistStatus()
 	Status.Enabled = IsWhitelistFollowings;
 	SendMessage("ReceiveWhitelistStatus", "Status", Status, ComPortIndex);
 }
+
+function AddMedia(medias)
+{
+	for(var i=0; i < medias.length; i++)
+	{
+		MediaPool.push(medias[i]);
+	}
+}
+
+function UpdateTagJob(job)
+{
+	for(var i=0; i<TagPool.length; i++)
+	{
+		if(TagPool[i].tag_name == job.tag_name)
+		{
+			if(job.eof)
+			{
+				TagPool[i].cursor_key = null;
+			}
+			else
+			{
+				TagPool[i].cursor_key = job.cursor_key;
+			}
+			TagPool[i].eof = false;
+		}
+	}
+	SaveDatabase();
+}
+
+function AddTagToList(tag)
+{
+	TagPool.push(new MediaTag(tag));
+	SaveDatabase();
+}
+
+function RemoveTagFromList(tag)
+{
+	var index = -1;
+	for(var i=0; i<TagPool.length; i++)
+	{
+		if(TagPool[i].tag_name == tag)
+		{
+			index = i;
+			break;
+		}
+	}
+
+	if(index > -1)
+	{
+		TagPool.splice(index, 1);
+	}
+	SaveDatabase();
+}
+
 
 function AddFollowings(users)
 {
@@ -950,6 +1048,12 @@ function UnfollowUser(user)
 	SendMessage("UnfollowUser", "User", user, ComPortContent);
 }
 
+function OnLikedMedia(media)
+{
+	LikedMedia.push(media);
+	SendMessage("OnLikedMediaComplete", "Media", media, ComPortIndex);
+}
+
 function OnFollowedUser(user)
 {
 	var index = GetUserIndexByUserID(user.user_id);
@@ -1061,6 +1165,33 @@ function UpdateCollectJob(seconds)
 	}
 }
 
+function UpdateCollectMediaJob(seconds)
+{
+	CollectMediaTime.Time -= seconds;
+	if(CollectMediaTime.Time < 0 && MediaPool.length < 20 && TagPool.length > 0)
+	{
+		CollectMediaTime.Time = getRandomInt(FollowSettings.TimeMin, FollowSettings.TimeMax);;
+		var index = getRandomInt(0, TagPool.length - 1);
+		if(index >= 0)
+		{
+			var MediaTag = TagPool.slice(index);
+			SendMessage("DoCollectMediaFromTag", "MediaTag", MediaTag[0], ComPortContent);
+		}
+	}
+}
+
+function UpdateLikeOrCommentMedia(seconds)
+{
+	LikeOrCommentTime.Time -= seconds;
+	if(LikeOrCommentTime.Time < 0 && MediaPool.length > 0)
+	{
+		LikeOrCommentTime.Time = getRandomInt(5, 20);
+		var index = getRandomInt(0, MediaPool.length - 1);
+		var MediaTag = MediaPool.splice(index, 1);
+		SendMessage("DoLikeMedia", "Media", MediaTag[0], ComPortContent);
+	}
+}
+
 function UpdateFollow(seconds)
 {
 	if(StartFollow)
@@ -1129,6 +1260,8 @@ function UpdateLoop()
 	UpdateCollectFollowings(SecondsPassed);
 	UpdateFollow(SecondsPassed);
 	UpdateUnfollow(SecondsPassed);
+	UpdateCollectMediaJob(SecondsPassed);
+	UpdateLikeOrCommentMedia(SecondsPassed);
 
 	CheckFollowPool(SecondsPassed);
 }

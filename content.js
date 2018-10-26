@@ -119,6 +119,14 @@ function OnMessageReceive(msg)
   {
     UnfollowUser(msg.User);
   }
+  else if(msg.Tag == "DoCollectMediaFromTag")
+  {
+    DoCollectMediaFromTag(msg.MediaTag);
+  }
+  else if(msg.Tag == "DoLikeMedia")
+  {
+    DoLikeMedia(msg.Media);
+  }
 }
 ///////////////////////////////////////////////////////////
 
@@ -175,6 +183,22 @@ function OnClickCollectFollowers()
   });
 }
 
+function DoLikeMedia(Media)
+{
+    LikeMedia(Media);
+}
+
+function DoCollectMediaFromTag(MediaTag)
+{
+   CollectMediaFromTag(MediaTag, function(Medias) {
+
+      if(Medias.length > 0)
+      {
+        SendMessage("AddMedia", "Medias", Medias);
+      }
+    });
+}
+
 function DoCollectJob(CollectJob)
 {
    CollectUsersFrom(CollectJob, function(users) {
@@ -194,6 +218,30 @@ function RetriveUserHeaders()
   CurrentUser = {"CSRF": CSRF};
   
   RetriveCurrentUserInfo(user_id);
+}
+
+function LikeMedia(media)
+{
+  $.ajax({
+    method: "POST",
+    url: "https://www.instagram.com/web/likes/" + media.media_id + "/like/",
+    beforeSend: function (xhr) {
+      xhr.setRequestHeader("x-csrftoken", CurrentUser.CSRF);
+      xhr.setRequestHeader("x-instagram-ajax", "1");
+    },
+    error: function (request, status, error) {
+        var Error = {};
+        Error.String = "MediaLiked";
+        Error.Request = request;
+        Error.Status = status;
+        Error.AjaxError = error;
+
+        SendMessage("Error", "Error", Error);
+    }
+  })
+  .done(function(msg){
+    SendMessage("LikedMedia", "Media", media);
+  });
 }
 
 function FollowUser(user)
@@ -315,6 +363,77 @@ function CollectFollowings(current_user_id, cursor_key, callback)
 
 }
 
+function CollectMediaFromTag(tagData, callback)
+{
+  var variables = {};
+  variables.tag_name = tagData.tag_name;
+  variables.show_ranked = false;
+  if(tagData.cursor_key)
+  {
+    variables.first = 20;
+    variables.after = tagData.cursor_key;
+  }
+  else
+  {
+    variables.first = 20;
+  }
+  var collectUrl = "https://www.instagram.com/graphql/query/?query_hash=f92f56d47dc7a55b606908374b43a314&variables=" + JSON.stringify(variables);
+  $.ajax({
+    url: collectUrl,
+    method: "GET",
+    error: function (request, status, error) {
+        var Error = {};
+        Error.String = "CollectMediaFromTagError";
+        Error.Request = request;
+        Error.Status = status;
+        Error.AjaxError = error;
+        Error.ExtraData = tagData.tag_name;
+
+        SendMessage("Error", "Error", Error);
+    }
+  })
+  .done(function(dataobj)
+  {
+    var MediaPool = [];
+    for(var i=0; i < dataobj.data.hashtag.edge_hashtag_to_media.edges.length; i++)
+    {
+      var media = dataobj.data.hashtag.edge_hashtag_to_media.edges[i].node;
+      if(media.edge_liked_by.count < 50)
+      {
+        var info = {};
+        info.media_src = media.thumbnail_src;
+        info.media_id = media.id;
+        info.is_video = media.is_video;
+        info.shortcode = media.shortcode; 
+        info.shortcode = media.shortcode; 
+        var captions = media.edge_media_to_caption.edges;
+        if(captions.length > 0)
+        {
+          info.caption = captions[0].node.text;
+        }
+
+        MediaPool.push(info);
+      }
+    }
+
+    var CollectMediaJob = {};
+    CollectMediaJob.tag_name = tagData.tag_name;
+    if(dataobj.data.hashtag.edge_hashtag_to_media.page_info.has_next_page)
+    {
+      CollectMediaJob.cursor_key = dataobj.data.hashtag.edge_hashtag_to_media.page_info.end_cursor;
+      CollectMediaJob.eof = false;
+    }
+    else
+    {
+      CollectMediaJob.cursor_key = null;
+      CollectMediaJob.eof = true;
+    }
+    SendMessage("UpdateCollectMediaJob", "Job", CollectMediaJob); 
+
+    callback(MediaPool);
+  });
+}
+
 function CollectUsersFrom(job, callback)
 {
   var variables = {};
@@ -423,4 +542,3 @@ function RetriveCurrentUserInfo(user_id)
     
   }); 
 }
-

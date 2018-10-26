@@ -2,6 +2,7 @@ var CurrentUser;
 var ComPort;
 
 var DisplayFollowersNum = 10;
+var DisplayLikesNum = 20;
 
 $(document).ready(function()
 {
@@ -141,6 +142,31 @@ $(document).ready(function()
 		});
 	});
 
+	$("#sidebar-likes-comments").click(function()
+	{
+		$(".content-wrapper").empty();
+		$(".content-wrapper").load("AutoBaiter/likes_comments.html", function()
+		{
+			var jsElm = document.createElement("script");
+			jsElm.type = "application/javascript";
+			jsElm.src = 'libs/bootstrap_tags/bootstrap-tagsinput.js';
+			document.body.appendChild(jsElm);
+			SetActiveSidebarItem("#sidebar-likes_comments");
+
+			SendMessage("RequestMediaStatus", "Num", DisplayLikesNum);
+
+			$("#media_tags").on('itemAdded', function(event)
+			{
+				SendMessage("AddTagToList", "TagName", event.item);
+			});
+
+			$("#media_tags").on('itemRemoved', function(event)
+			{
+				SendMessage("RemoveTagFromList", "TagName", event.item);
+			});
+		});
+	});
+
 	$("#sidebar-home").click();
 	CreateComPort();
 })
@@ -151,11 +177,13 @@ function SetActiveSidebarItem(sidebar_id)
 	$("#sidebar-whitelist").addClass("sidebar-item");
 	$("#sidebar-settings").addClass("sidebar-item");
 	$("#sidebar-help").addClass("sidebar-item");
+	$("#sidebar-likes_comments").addClass("sidebar-item");
 
 	$("#sidebar-home").removeClass("sidebar-item-active");
 	$("#sidebar-whitelist").removeClass("sidebar-item-active");
 	$("#sidebar-settings").removeClass("sidebar-item-active");
 	$("#sidebar-help").removeClass("sidebar-item-active");
+	$("#sidebar-likes_comments").removeClass("sidebar-item-active");
 
 	$(sidebar_id).removeClass("sidebar-item");
 	$(sidebar_id).addClass("sidebar-item-active");
@@ -163,15 +191,15 @@ function SetActiveSidebarItem(sidebar_id)
 
 function CreateComPort()
 {
-  ComPort = chrome.runtime.connect({name: "instafollow213index"});
-  ComPort.onMessage.addListener(OnMessageReceive);
+	ComPort = chrome.runtime.connect({name: "instafollow213index"});
+	ComPort.onMessage.addListener(OnMessageReceive);
 }
 
 function SendMessage(tag, msgTag, msg)
 {
-    var sendObj = {"Tag": tag};
-    sendObj[msgTag] = msg;
-    ComPort.postMessage(sendObj);
+	var sendObj = {"Tag": tag};
+	sendObj[msgTag] = msg;
+	ComPort.postMessage(sendObj);
 }
 
 function OnMessageReceive(msg)
@@ -191,6 +219,10 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "UserUnfollowComplete")
 	{
 		OnUnfollowedUser(msg.User);
+	}
+	else if(msg.Tag == "OnLikedMediaComplete")
+	{
+		OnLikedMedia(msg.Media);
 	}
 	else if(msg.Tag == "Settings")
 	{
@@ -221,6 +253,10 @@ function OnMessageReceive(msg)
 	else if(msg.Tag == "ReceiveWhitelistStatus")
 	{
 		SetWhitelistStatus(msg.Status);
+	}
+	else if(msg.Tag == "UpdateMediaStatus")
+	{
+		UpdateMediaStatus(msg.Status);
 	}
 }
 
@@ -401,13 +437,13 @@ function ProcessFilteredFollowings(users)
 	{
 		var user = users[i];
 		var userRow = `
-			<li class="add-whitelist-user" user_id=`+ user.user_id + `>
-			<div class="row">
-			<div class="col-md-2"><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></div>
-			<div class='col-md-5 align-mid-vertical text-instafollow-td'>` + user.username + `</div><div class='col-md-5 text-instafollow-td align-mid-vertical'>` + user.full_name + `</div>
-			</div>
-			</li>
-			`;
+		<li class="add-whitelist-user" user_id=`+ user.user_id + `>
+		<div class="row">
+		<div class="col-md-2"><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></div>
+		<div class='col-md-5 align-mid-vertical text-instafollow-td'>` + user.username + `</div><div class='col-md-5 text-instafollow-td align-mid-vertical'>` + user.full_name + `</div>
+		</div>
+		</li>
+		`;
 
 		$(filter_users_block).append(userRow);
 	}
@@ -424,7 +460,7 @@ function AddedWhitelistUsers(users)
 		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
 		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
 		<td style="vertical-align: middle;">
-        <button class="btn-danger remove-user-whitelist" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
+		<button class="btn-danger remove-user-whitelist" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
 		</tr>
 		`;
 		$(whitelist_block).prepend(userRow);
@@ -446,10 +482,29 @@ function UpdateCollectJobStatus(Jobs)
 		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
 		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
 		<td style="vertical-align: middle;">
-        <button class="btn-danger remove-user-collect" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
+		<button class="btn-danger remove-user-collect" user_id=`+ user.user_id +`><span class="glyphicon glyphicon-remove"></span></button></td>
 		</tr>
 		`;
 		$(collect_table).prepend(userRow);
+	}
+}
+
+function UpdateMediaStatus(Status)
+{
+	var like_block = $("#like-block");
+	var like_table = $(like_block).find("tbody");
+	$(like_table).empty();
+
+	for(var i=0; i < Status.LikedMedias.length; i++)
+	{
+		OnLikedMedia(Status.LikedMedias[i]);
+	}
+
+	$('media_tags').tagsinput('removeAll');
+	for(var i=0; i < Status.Tags.length; i++)
+	{
+		//console.log(Status.Tags[i].tag_name);
+		//$("#media_tags").tagsinput('add', Status.Tags[i].tag_name);
 	}
 }
 
@@ -480,10 +535,10 @@ function UpdateFollowStatus(AllUsers)
 function OnFollowedUser(user)
 {
 	var userRow = `
-		<tr>
-		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
-		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
-		</tr>
+	<tr>
+	<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
+	<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
+	</tr>
 	`;
 
 	var follow_block = $("#follow-block");
@@ -502,10 +557,10 @@ function OnFollowedUser(user)
 function OnUnfollowedUser(user)
 {
 	var userRow = `
-		<tr>
-		<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
-		<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
-		</tr>
+	<tr>
+	<td><a href='https://www.instagram.com/` + user.username + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + user.user_pic_url + `'/></a></td>
+	<td class='align-mid-vertical text-instafollow-td'>` + user.username + `</td><td class='text-instafollow-td align-mid-vertical'>` + user.full_name + `</td>
+	</tr>
 	`;
 
 	var unfollow_block = $("#unfollow-block");
@@ -520,4 +575,26 @@ function OnUnfollowedUser(user)
 		$(table_rows).slice(start_delete).remove();
 	}
 
+}
+
+function OnLikedMedia(media)
+{
+	var mediaRow = `
+	<tr>
+	<td><a href='https://www.instagram.com/p/` + media.shortcode + `/' target='_blank'><img class='img-rounded' width='64' height='64' src='` + media.media_src + `'/></a></td>
+	<td class='align-mid-vertical text-instafollow-td'>` + media.caption + `</td>
+	</tr>
+	`;
+
+	var like_bock = $("#like-block");
+	var like_table = $(like_bock).find("tbody");
+	$(like_table).prepend(mediaRow);
+
+	var table_rows = $(like_table).find("tr");
+	var num_rows = table_rows.length;
+	if(num_rows > DisplayLikesNum)
+	{
+		var start_delete = num_rows - (num_rows - DisplayLikesNum);
+		$(table_rows).slice(start_delete).remove();
+	}	
 }
