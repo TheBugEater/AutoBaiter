@@ -4,6 +4,8 @@ var CurrentUser;
 var LastUsername = "";
 var SharedData = null;
 
+var UserTag = "._7UhW9";
+
 $(document).ready(function()
 {
   CreateComPort();
@@ -52,7 +54,7 @@ function UpdateStates()
   }
 
   // Username tag
-  var thisPageUser = $(".AC5d8").text();
+  var thisPageUser = $(UserTag).text();
 
   var IsDisplayed = $(collectDiv).is(':visible');      
   if(IsDisplayed && thisPageUser == LastUsername)
@@ -160,7 +162,7 @@ function CreateCollectFollowersButton()
 
 function OnClickCollectFollowers()
 {
-    var thisPageUser = $(".AC5d8").text();
+    var thisPageUser = $(UserTag).text();
     GetCurrentPageUserData(thisPageUser, function(userdata){
 
       var collectButton = $("#collect-followers-instafollow");
