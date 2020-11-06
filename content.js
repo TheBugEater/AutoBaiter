@@ -4,10 +4,11 @@ var CurrentUser;
 var LastUsername = "";
 var SharedData = null;
 
-var UserTag = "._7UhW9";
+var UserTag = ".nZSzR";
 
 $(document).ready(function()
 {
+  debugger;
   CreateComPort();
   RetriveUserHeaders();
   CreateCollectFollowersButton();
@@ -54,7 +55,7 @@ function UpdateStates()
   }
 
   // Username tag
-  var thisPageUser = $(UserTag).text();
+  var thisPageUser = $(UserTag).find('._7UhW9').text();
 
   var IsDisplayed = $(collectDiv).is(':visible');      
   if(IsDisplayed && thisPageUser == LastUsername)
@@ -162,7 +163,7 @@ function CreateCollectFollowersButton()
 
 function OnClickCollectFollowers()
 {
-    var thisPageUser = $(UserTag).text();
+    var thisPageUser = $(UserTag).find('._7UhW9').text();
     GetCurrentPageUserData(thisPageUser, function(userdata){
 
       var collectButton = $("#collect-followers-instafollow");
@@ -449,7 +450,7 @@ function CollectUsersFrom(job, callback)
   {
     variables.first = "20";
   }
-  var userurl = "https://www.instagram.com/graphql/query/?query_id=17851374694183129&variables=" + JSON.stringify(variables);
+  var userurl = "https://www.instagram.com/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=" + JSON.stringify(variables);
 
   $.ajax({
     url: userurl,
@@ -472,7 +473,7 @@ function CollectUsersFrom(job, callback)
     {
       user = dataobj.data.user.edge_followed_by.edges[i];
       // Only add those who are not followed by this user
-      if(user.node.followed_by_viewer == false && user.node.requested_by_viewer == false && CurrentUser.user_id != user.node.id)
+      if(user.node.followed_by_viewer == false && user.node.requested_by_viewer == false && CurrentUser.user_id != user.node.id && user.node.is_private == false)
       {
         var UserData = {"username": user.node.username, "user_id": user.node.id, "full_name": user.node.full_name, "user_pic_url": user.node.profile_pic_url};
         ExtractedUsers.push(UserData);

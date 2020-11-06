@@ -1261,7 +1261,7 @@ function UpdateLoop()
 	UpdateFollow(SecondsPassed);
 	UpdateUnfollow(SecondsPassed);
 	UpdateCollectMediaJob(SecondsPassed);
-	//UpdateLikeOrCommentMedia(SecondsPassed);
+	UpdateLikeOrCommentMedia(SecondsPassed);
 
 	CheckFollowPool(SecondsPassed);
 }
