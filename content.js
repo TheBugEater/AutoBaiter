@@ -404,10 +404,10 @@ function CollectMediaFromTag(tagData, callback)
       if(media.edge_liked_by.count < 50)
       {
         var info = {};
+        info.tag_name = tagData.tag_name;
         info.media_src = media.thumbnail_src;
         info.media_id = media.id;
         info.is_video = media.is_video;
-        info.shortcode = media.shortcode; 
         info.shortcode = media.shortcode; 
         var captions = media.edge_media_to_caption.edges;
         if(captions.length > 0)
@@ -424,12 +424,11 @@ function CollectMediaFromTag(tagData, callback)
     if(dataobj.data.hashtag.edge_hashtag_to_media.page_info.has_next_page)
     {
       CollectMediaJob.cursor_key = dataobj.data.hashtag.edge_hashtag_to_media.page_info.end_cursor;
-      CollectMediaJob.eof = false;
     }
     else
     {
       CollectMediaJob.cursor_key = null;
-      CollectMediaJob.eof = true;
+      CollectMediaJob.count = 100;
     }
     SendMessage("UpdateCollectMediaJob", "Job", CollectMediaJob); 
 

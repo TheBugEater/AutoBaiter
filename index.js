@@ -164,6 +164,8 @@ $(document).ready(function()
 			{
 				SendMessage("RemoveTagFromList", "TagName", event.item);
 			});
+
+			SetActiveSidebarItem("#sidebar-likes-comments");
 		});
 	});
 
@@ -177,13 +179,13 @@ function SetActiveSidebarItem(sidebar_id)
 	$("#sidebar-whitelist").addClass("sidebar-item");
 	$("#sidebar-settings").addClass("sidebar-item");
 	$("#sidebar-help").addClass("sidebar-item");
-	$("#sidebar-likes_comments").addClass("sidebar-item");
+	$("#sidebar-likes-comments").addClass("sidebar-item");
 
 	$("#sidebar-home").removeClass("sidebar-item-active");
 	$("#sidebar-whitelist").removeClass("sidebar-item-active");
 	$("#sidebar-settings").removeClass("sidebar-item-active");
 	$("#sidebar-help").removeClass("sidebar-item-active");
-	$("#sidebar-likes_comments").removeClass("sidebar-item-active");
+	$("#sidebar-likes-comments").removeClass("sidebar-item-active");
 
 	$(sidebar_id).removeClass("sidebar-item");
 	$(sidebar_id).addClass("sidebar-item-active");
@@ -500,11 +502,11 @@ function UpdateMediaStatus(Status)
 		OnLikedMedia(Status.LikedMedias[i]);
 	}
 
-	$('media_tags').tagsinput('removeAll');
+	$('#media_tags').tagsinput('removeAll');
 	for(var i=0; i < Status.Tags.length; i++)
 	{
-		//console.log(Status.Tags[i].tag_name);
-		//$("#media_tags").tagsinput('add', Status.Tags[i].tag_name);
+		var mediaTag = $('#media_tags');
+		mediaTag.tagsinput('add', Status.Tags[i].tag_name);
 	}
 }
 

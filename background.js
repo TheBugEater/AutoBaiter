@@ -88,7 +88,7 @@ function MediaTag(tag_name, cursor_key, eof)
 {
 	this.tag_name = tag_name;
 	this.cursor_key = cursor_key;
-	this.eof = eof;
+	this.count = 0;
 }
 
 $(document).ready(function()
@@ -830,15 +830,16 @@ function UpdateTagJob(job)
 	{
 		if(TagPool[i].tag_name == job.tag_name)
 		{
-			if(job.eof)
+			if(TagPool[i].count >= 3)
 			{
 				TagPool[i].cursor_key = null;
+				TagPool[i].count = 0;
 			}
 			else
 			{
 				TagPool[i].cursor_key = job.cursor_key;
+				TagPool[i].count++;
 			}
-			TagPool[i].eof = false;
 		}
 	}
 	SaveDatabase();
@@ -846,6 +847,15 @@ function UpdateTagJob(job)
 
 function AddTagToList(tag)
 {
+	for(var i=0; i<TagPool.length; i++)
+	{
+		if(TagPool[i].tag_name == tag)
+		{
+			// Duplicate
+			return;
+		}
+	}
+
 	TagPool.push(new MediaTag(tag));
 	SaveDatabase();
 }
@@ -866,6 +876,13 @@ function RemoveTagFromList(tag)
 	{
 		TagPool.splice(index, 1);
 	}
+
+	for(var i = MediaPool.length -1; i >= 0; i--)
+	{
+		if(MediaPool[i].tag_name == tag)
+			MediaPool.splice(i, 1);
+	}
+
 	SaveDatabase();
 }
 
@@ -1185,9 +1202,8 @@ function UpdateLikeOrCommentMedia(seconds)
 	LikeOrCommentTime.Time -= seconds;
 	if(LikeOrCommentTime.Time < 0 && MediaPool.length > 0)
 	{
-		LikeOrCommentTime.Time = getRandomInt(5, 20);
-		var index = getRandomInt(0, MediaPool.length - 1);
-		var MediaTag = MediaPool.splice(index, 1);
+		LikeOrCommentTime.Time = getRandomInt(20, 50);
+		var MediaTag = MediaPool.splice(0, 1);
 		SendMessage("DoLikeMedia", "Media", MediaTag[0], ComPortContent);
 	}
 }
@@ -1200,9 +1216,7 @@ function UpdateFollow(seconds)
 		if(FollowTime.Time < 0 && UserPool.length > 0)
 		{
 			FollowTime.Time = getRandomInt(FollowSettings.TimeMin, FollowSettings.TimeMax);
-
-			var RandFollow = getRandomInt(0, UserPool.length - 1);
-			FollowUser(UserPool[RandFollow]);
+			FollowUser(UserPool[0]);
 		}
 
 	}	
@@ -1216,9 +1230,7 @@ function UpdateUnfollow(seconds)
 		if(UnfollowTime.Time < 0 && AllFollowings.length > 0)
 		{
 			UnfollowTime.Time = getRandomInt(UnfollowSettings.TimeMin, UnfollowSettings.TimeMax);
-
-			var RandUnfollow = getRandomInt(0, AllFollowings.length - 1);
-			UnfollowUser(AllFollowings[RandUnfollow]);
+			UnfollowUser(AllFollowings[0]);
 		}
 	}		
 }
